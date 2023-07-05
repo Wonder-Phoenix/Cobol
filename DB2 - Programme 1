@@ -1,0 +1,340 @@
+#********************************************************************************************************************#
+#  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P1 qui lit et affiche toutes les colonnes #
+#           du département numéro 'E10' puis lit et affiche de la même façon tous les départements de la table       #
+#           DEPARTEMENT triés sur le nom du département. Pour la liste des départements, remplacer les display par   #
+#           l'édition suivante écrite dans un fichier d'édition et ajouter le nom du chef de département             #
+#********************************************************************************************************************#
+
+# Programme DB2P1 + JCL + SYSOUT + EDITION
+
+#*******************************************************************#
+#                           INFORMATIONS                            #
+#*******************************************************************#
+
+                            LISTE DES DEPARTEMENTS
+                            ----------------------
+
+NUM    NOM DEPT    LIEU    MAT CHEF   NOM CHEF
+---    --------    ----    --------   --------
+P02    COMMER      BAT2      70       NOEL
+C04    COMPTA      BAT1      40       JAVA
+P01    INFO        BAT3      20       DUPOND
+E10    PAIE        BAT2      10       DURAND
+
+
+
+---------+---------+---------+---------+---------+---------+--
+  SELECT * FROM EMPLOYE;
+---------+---------+---------+---------+---------+---------+--
+MAT  NOM      NOD  DAT               SAL        COM
+---------+---------+---------+---------+---------+---------+--
+10   DURAND   E10  2000-02-10   11000.00    5000.00
+20   DUPOND   P01  1998-01-11   15100.50  ---------
+30   BARI     P02  2001-01-04    6000.00    3000.00
+40   JAVA     C04  2005-12-03   21000.50    1000.50
+50   CICS     P02  2006-06-20    8500.00    3500.50
+60   PARIS    P01  2008-04-22    9000.00    3500.00
+70   NOEL     P02  2007-05-18   10500.00     900.50
+---------+---------+---------+---------+---------+---------+--
+  SELECT * FROM DEPARTEMENT;
+---------+---------+---------+---------+---------+---------+--
+NOD  NDE     LIE   CHE
+---------+---------+---------+---------+---------+---------+--
+C04  COMPTA  BAT1  40
+E10  PAIE    BAT2  10
+P01  INFO    BAT3  20
+P02  COMMER  BAT2  70
+
+
+
+#*******************************************************************#
+#                            PROGRAMME                              #
+#*******************************************************************#
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. DB2P1.
+       AUTHOR. OTEUR.
+       DATE-WRITTEN. 29/03/2023.
+      ******************************************************************
+      *  FONCTION DU PROGRAMME: EDITION DES DEPARTEMENTS               *
+      *  250429 : CREATION DU PROGRAMME                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      * DECLARATION DU FICHIER D'EDITION
+           SELECT EDIT ASSIGN TO EDIT
+                  ORGANIZATION IS SEQUENTIAL
+                  ACCESS MODE  IS SEQUENTIAL
+                  FILE STATUS  IS FS-EDIT.
+       DATA DIVISION.
+      * DECLARATION DU BUFFER
+       FILE SECTION.
+       FD  EDIT RECORDING MODE IS F.
+       01  ENR-EDIT.
+      * METTRE EN COMMENTAIRE LE CARACTERE DE SAUT SI ON UTILISE
+      * WRITE AFTER ADVANCING
+           05 CAR-SAUT       PIC X.
+           05 LIG-EDIT       PIC X(132).
+       WORKING-STORAGE SECTION.
+      * FILE STATUS
+       01  FS-EDIT           PIC 99 VALUE ZEROES.
+      * DECLARATION DE LA TABLE DEPARTEMENT
+           EXEC SQL INCLUDE DEPT    END-EXEC.
+      * DECLARATION DE LA TABLE EMPLOYE
+           EXEC SQL INCLUDE EMPLOYE END-EXEC.
+      * DECLARATION DE LA SQLCA
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+      * DECLARATION DES HOST-VARIABLES DU DEPARTEMENT
+       01  HVD-DEPARTEMENT.
+           05 HVD-NOD    PIC X(3).
+           05 HVD-NDE    PIC X(6).
+           05 HVD-LIE    PIC X(4).
+           05 HVD-CHE    PIC X(3).
+
+      * DECLARATION DES HOST-VARIABLES DE L'EMPLOYE
+       01  HVE-EMPLOYE.
+           05 HVE-NOD        PIC X(3).
+           05 HVE-NOM        PIC X(7).
+      * DECLARATION DU CURSEUR POUR LA LISTE
+           EXEC SQL DECLARE LISTE CURSOR FOR
+            SELECT
+                  D.NOD,
+                  NDE,
+                  LIE,
+                  CHE,
+                  NOM
+            FROM
+                 EMPLOYE E JOIN DEPARTEMENT D
+                 ON E.MAT = D.CHE
+            ORDER BY NDE
+           END-EXEC.
+
+
+      * LIGNES EDITION
+       01  L1.
+            05                      PIC X(30) VALUE SPACES.
+            05                      PIC X(22) VALUE
+                                    'LISTE DES DEPARTEMENTS'.
+       01  L2.
+            05                      PIC X(30) VALUE SPACES.
+            05                      PIC X(22) VALUE ALL '-'.
+
+       01  L3.
+            05                      PIC X(03) VALUE 'NUM'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE 'NOM DEPT'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(04) VALUE 'LIEU'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE 'MAT CHEF'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE 'NOM CHEF'.
+
+        01  L4.
+            05                      PIC X(03) VALUE ALL '-'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE ALL '-'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(04) VALUE ALL '-'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE ALL '-'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE ALL '-'.
+
+       01  L5.
+            05 ED-NOD               PIC X(03) VALUE SPACES.
+            05                      PIC X(03) VALUE SPACES.
+            05 ED-NDE               PIC X(08) VALUE SPACES.
+            05                      PIC X(03) VALUE SPACES.
+            05 ED-LIE               PIC X(04) VALUE SPACES.
+            05                      PIC X(03) VALUE SPACES.
+            05 ED-CHE               PIC X(08) VALUE SPACES.
+            05                      PIC X(03) VALUE SPACES.
+            05 ED-NOM               PIC X(08) VALUE SPACES.
+       
+      * SQLCODE AU FORMAT EDITION
+       01  ED-SQLCODE               PIC +(10) VALUE ZEROES.
+
+      * COMPTEUR
+       01  CPT-DEPT                 PIC 9     VALUE ZEROES.
+
+      * INDICATEUR DE FIN DE LISTE
+       01                           PIC X     VALUE SPACES.
+            88 FIN-LISTE                      VALUE '1'.
+
+
+       PROCEDURE DIVISION.
+           PERFORM DEBUT
+           PERFORM UNTIL FIN-LISTE
+              PERFORM TRAITEMENT
+              PERFORM FETCH-LISTE
+           END-PERFORM
+           PERFORM FIN
+           .
+
+       DEBUT.
+      * OUVERTURE DU FICHIER D'EDITION
+           OPEN OUTPUT EDIT
+           IF FS-EDIT NOT = ZEROES
+              DISPLAY 'ERREUR OPEN FICHIER EDIT, FS : ' FS-EDIT
+              PERFORM FIN-ERREUR
+           END-IF
+
+      * EDITION DE L'ENTETE
+           MOVE '1'      TO CAR-SAUT
+           MOVE L1       TO LIG-EDIT
+           WRITE ENR-EDIT
+           MOVE ' '      TO CAR-SAUT
+           MOVE L2       TO LIG-EDIT
+           WRITE ENR-EDIT
+           MOVE '0'      TO CAR-SAUT
+           MOVE L3       TO LIG-EDIT
+           WRITE ENR-EDIT
+           MOVE ' '      TO CAR-SAUT
+           MOVE L4       TO LIG-EDIT
+           WRITE ENR-EDIT 
+
+      * OUVERTURE DU CURSEUR
+           EXEC SQL OPEN LISTE END-EXEC
+           IF SQLCODE NOT = ZEROES
+              MOVE SQLCODE TO ED-SQLCODE
+              DISPLAY 'ERREUR OPEN CURSEUR LISTE, SQLCODE : ' ED-SQLCODE
+              PERFORM FIN-ERREUR
+           END-IF
+
+      * 1ER FETCH
+           PERFORM FETCH-LISTE
+           .
+
+       TRAITEMENT.
+      * EDITION D'UNE LIGNE DETAIL
+           MOVE ' '      TO CAR-SAUT
+           MOVE HVD-NOD  TO ED-NOD
+           MOVE HVD-NDE  TO ED-NDE
+           MOVE HVD-LIE  TO ED-LIE
+           MOVE HVD-CHE  TO ED-CHE
+           MOVE HVE-NOM  TO ED-NOM
+           MOVE L5       TO LIG-EDIT
+           WRITE ENR-EDIT
+           .
+
+      FETCH-LISTE.
+           EXEC SQL FETCH LISTE
+             INTO
+                 :HVD-NOD,
+                 :HVD-NDE,
+                 :HVD-LIE,
+                 :HVD-CHE,
+                 :HVE-NOM
+           END-EXEC
+           EVALUATE SQLCODE
+             WHEN ZEROES
+                  ADD 1 TO CPT-DEPT
+             WHEN +100
+                  SET FIN-LISTE TO TRUE
+             WHEN OTHER
+                  MOVE SQLCODE TO ED-SQLCODE
+                  DISPLAY
+                  'ERREUR FETCH CURSEUR LISTE, SQLCODE : ' ED-SQLCODE
+                  PERFORM FIN-ERREUR
+           END-EVALUATE
+           .
+
+      FIN-ERREUR.
+           MOVE 15 TO RETURN-CODE
+           PERFORM FIN
+           .  
+
+      FIN.
+     * AFFICHAGE DES COMPTEURS
+           DISPLAY 'NB DEPARTEMENTS LUS : ' CPT-DEPT
+     * FERMETURE DES FICHIERS
+           CLOSE EDIT
+           EXEC SQL CLOSE LISTE END-EXEC
+     * ARRET DU PROGRAMME
+           STOP RUN
+           .
+
+
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API8DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
+//*
+//PROCLIB  JCLLIB ORDER=SDJ.FORM.PROCLIB
+//*
+//         SET SYSUID=API8
+//         NOMPGM:DB2P1
+//*
+//APPROC   EXEC COMPDB2
+//STEPDB2.SYSLIB   DD DSN=API8.SOURCE.DCLGEN,DISP=SHR
+//                 DD DSN=API8.SOURCE.COPY,DISP=SHR
+//STEPDB2.SYSIN    DD DSN=API8.SOURCE.DB2(DB2P1),DISP=SHR
+//STEPDB2.DBRMLIB DD DSN=API8.SOURCE.DBRMLIB(DB2P1),DISP=SHR
+//STEPLNK.SYSLMOD  DD DSN=API8.SOURCE.PGMLIB(DB2P1),DISP=SHR
+//*
+//*--- ETAPE DE BIND --------------------------------------
+//*
+//BIND     EXEC PGM=IKJEFT01,COND=(4,LT)
+//*DBRMLIB  DD  DSN=&SYSUID..DB2.DBRMLIB,DISP=SHR
+//DBRMLIB  DD  DSN=API8.SOURCE.DBRMLIB,DISP=SHR
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=25000
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  BIND PLAN      (DB2P1) -
+       QUALIFIER (API8)     -
+       ACTION    (REPLACE) -
+       MEMBER    (DB2P1) -
+       VALIDATE  (BIND)    -
+       ISOLATION (CS)      -
+       ACQUIRE   (USE)     -
+       RELEASE   (COMMIT)  -
+       EXPLAIN   (NO)
+//*
+//* DELETE DU FICHIER D'EDITION
+//DEL      EXEC PGM=IDCAMS
+//SYSPRINT DD   SYSOUT=*
+//SYSIN    DD   *
+  DELETE API8.EDITION
+  SET MAXCC = 0
+//*
+//* EXECUTION DU PROGRAMME
+//STEPRUN  EXEC PGM=IKJEFT01,COND=(4,LT)
+//STEPLIB  DD DSN=API8.SOURCE.PGMLIB,DISP=SHR
+//EDIT     DD  DSN=API8.EDITION,DISP=(,CATLG,DELETE),
+//         DCB=(DSORG=PS,RECFM=FB,LRECL=133),
+//         SPACE=(TRK,(1))
+//SYSOUT   DD  SYSOUT=*,OUTLIM=1000
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=2500
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(DB2P1) PLAN (DB2P1) PARMS('11001')
+//
+
+
+#*******************************************************************#
+#                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
+#*******************************************************************#
+NB DEPARTEMENTS LUS : 4
+
+
+
+#*******************************************************************#
+#                          FICHIER D'EDITION                        #
+#*******************************************************************#
+
+********************************* Top of Data **********************************
+1                              LISTE DES DEPARTEMENTS
+                               ----------------------
+0NUM   NOM DEPT   LIEU   MAT CHEF   NOM CHEF
+ ---   --------   ----   --------   --------
+ P02   COMMER     BAT2   70         NOEL
+ C04   COMPTA     BAT1   40         JAVA
+ P01   INFO       BAT3   20         DUPOND
+ E10   PAIE       BAT2   10         DURAND
+******************************** Bottom of Data ********************************

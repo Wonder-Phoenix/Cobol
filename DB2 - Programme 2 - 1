@@ -1,0 +1,345 @@
+#********************************************************************************************************************#
+#  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P2 qui édite la liste des employés par    #
+#           bâtiment.                                                                                                #
+#********************************************************************************************************************#
+
+Programme DB2P2 + JCL + SYSOUT + EDITION
+
+#*******************************************************************#
+#                            PROGRAMME                              #
+#*******************************************************************#
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. DB2P2.
+       AUTHOR. SV.
+       DATE-WRITTEN. 26/04/2023.
+      ******************************************************************
+      *  FONCTION DU PROGRAMME: EDITION DES EMPLOYÉS AVEC RUPTURE      *
+      *  SUR LE BATIMENT                                               *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       
+       FILE-CONTROL.
+      * DECLARATION DU FICHIER D'EDITION
+           SELECT EDIT ASSIGN TO EDIT
+                  ORGANIZATION IS SEQUENTIAL
+                  ACCESS MODE  IS SEQUENTIAL
+                  FILE STATUS  IS FS-EDIT.
+                  
+       DATA DIVISION.
+      * DECLARATION DU BUFFER
+       FILE SECTION.
+       FD  EDIT RECORDING MODE IS F.
+       01  ENR-EDIT.
+      * METTRE EN COMMENTAIRE LE CARACTERE DE SAUT SI ON UTILISE
+      * WRITE AFTER ADVANCING
+           05 CAR-SAUT       PIC X.
+           05 LIG-EDIT       PIC X(132).
+           
+       WORKING-STORAGE SECTION.
+      * FILE STATUS
+       01  FS-EDIT           PIC 99 VALUE ZEROES.
+       
+      * DECLARATION DE LA TABLE DEPARTEMENT
+           EXEC SQL INCLUDE DEPT    END-EXEC.
+      * DECLARATION DE LA TABLE EMPLOYE
+           EXEC SQL INCLUDE EMPLOYE END-EXEC.
+      * DECLARATION DE LA SQLCA
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+           
+      * DECLARATION DES HOST-VARIABLES DU DEPARTEMENT
+       01   HVD-DEPARTEMENT.
+           05 HVD-NOD         PIC X(3).
+           05 HVD-NDE         PIC X(6).
+           05 HVD-LIE         PIC X(4).
+          
+      * DECLARATION DES HOST-VARIABLES DE L'EMPLOYE
+       01  HVE-EMPLOYE.
+          05 HVE-MAT          PIC X(3).
+          05 HVE-NOD          PIC X(3).
+          05 HVE-NOM          PIC X(7).
+
+      * SQLCODE EN PICTURE EDITION
+       01  ED-SQLCODE        PIC +(10) VALUE ZEROES.
+       
+      * INDICATEUR DE FIN DE LISTE
+       01                     PIC X     VALUE SPACES.
+           88 FIN-LISTE                VALUE '1'.
+           
+      * ZONE RESERVE POUR TEST RUPTURE
+       01  RES-LIE           PIC X(04) VALUE SPACES.
+       
+      * COMPTEURS
+       01  CPT-EMPL          PIC 9     VALUE ZEROES.
+       
+      * REQUETE POUR LISTE DES EMPLOYES PAR BATIMENT
+           EXEC SQL DECLARE LISTE CURSOR FOR
+            SELECT MAT,
+                  NOM,
+                  E.NOD,
+                  NDE,
+                  LIE
+            FROM
+                  EMPLOYE E JOIN DEPARTEMENT D
+                  ON E.NOD = D.NOD
+            ORDER BY LIE,
+                     NDE,
+                     NOM
+           END-EXEC
+                
+       * LIGNES EDITION
+        01  L1.
+            05                      PIC X(30) VALUE SPACES.
+            05                      PIC X(18) VALUE 'LISTE DES EMPLOYES'.
+            05                      PIC X(10) VALUE SPACES.
+            05                      PIC X(03) VALUE 'LE'.
+            05 ED-DATJ              PIC X(10) VALUE SPACES.
+
+       01  L2.
+            05                      PIC X(30) VALUE SPACES.
+            05                      PIC X(18) VALUE ALL '-'.
+
+       01  L3.
+            05                      PIC X(11) VALUE 'BATIMENT : '.
+            05 ED-LIE               PIC X(04) VALUE SPACES.
+
+        01  L4.
+            05                      PIC X(03) VALUE 'MAT'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE 'NOM EMPL'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE 'NUM DEPT'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE 'NOM DEPT'.
+            05                      PIC X(03) VALUE SPACES.
+
+        01  L5.
+            05                      PIC X(03) VALUE ALL '-'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE ALL '-'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE ALL '-'.
+            05                      PIC X(03) VALUE SPACES.
+            05                      PIC X(08) VALUE ALL '-'.
+            05                      PIC X(03) VALUE SPACES.
+
+       01  L6.
+            05 ED-MAT               PIC X(03) VALUE SPACES.
+            05                      PIC X(03) VALUE SPACES.
+            05 ED-NOM               PIC X(08) VALUE SPACES.
+            05                      PIC X(03) VALUE SPACES.
+            05 ED-NOD.              PIC X(08) VALUE SPACES.
+            05                      PIC X(03) VALUE SPACES.
+            05 ED-NDE               PIC X(08) VALUE SPACES.
+            05                      PIC X(03) VALUE SPACES.
+
+       PROCEDURE DIVISION.
+
+            PERFORM DEBUT
+            PERFORM UNTIL FIN-LISTE
+       * EDITER LES LIGNES BATIMENT ET SAUVEGARDER LE BATIMENT EN COURS
+               PERFORM LIGNE-BATIMENT
+       * --> TEST DE LA RUPTURE SUR LE BATIMENT
+               PERFORM UNTIL HVD-LIE NOT = RES-LIE OR FIN-LISTE
+       * EDITER LES LIGNES DETAIL POUR LE MEME BATIMENT
+                  PERFORM LIGNE-DETAIL
+                  PERFORM FETCH-LISTE
+               END-PERFORM
+            END-PERFORM
+            PERFORM FIN
+            .
+
+       * OUVERTIURE FICHIER EDITION ET CURSEUR, 1ER FETCH, ENTETE
+        DEBUT.
+            OPEN OUTPUT EDIT
+            IF FS-EDIT NOT = ZEROES
+               DISPLAY 'ERREUR OPEN EDIT, FS : ' FS-EDIT
+               PERFORM FIN-ERREUR
+            END-IF
+
+            EXEC SQL OPEN LISTE END-EXEC
+            IF SQLCODE NOT = ZEROES
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY 'ERREUR OPEN CURSEUR LISTE, SQLCODE : '
+                       ED-SQLCODE
+               PERFORM FIN-ERREUR
+            END-IF
+
+       * 1ERE LECTURE DU CURSEUR LISTE
+            PERFORM FETCH-LISTE
+
+       * RECUPERATION DE LA DATE DU JOUR
+            MOVE FUNCTION CURRENT-DATE(7 : 2) TO ED-DATJ(1 : 2)
+            MOVE '/'                          TO ED-DATJ(3 : 1)
+            MOVE FUNCTION CURRENT-DATE(5 : 2) TO ED-DATJ(4 : 2)
+            MOVE '/'                          TO ED-DATJ(6 : 1)
+            MOVE FUNCTION CURRENT-DATE(1 : 4) TO ED-DATJ(7 : 4)
+
+       * EDITION DE L'ENTETE
+            MOVE '1'     TO CAR-SAUT
+            MOVE L1      TO LIG-EDIT
+            WRITE ENR-EDIT
+            MOVE ' '     TO CAR-SAUT
+            MOVE L2      TO LIG-EDIT
+            WRITE ENR-EDIT
+            .
+
+       * EDITION DES LIGNES DU BATIMENT
+       LIGNE-BATIMENT.
+           MOVE HVD-LIE  TO ED-LIE
+           MOVE '0'      TO CAR-SAUT
+           MOVE L3       TO LIG-EDIT
+           WRITE ENR-EDIT
+
+           MOVE ' '      TO CAR-SAUT
+           MOVE L4       TO LIG-EDIT
+           WRITE ENR-EDIT
+
+           MOVE ' '      TO CAR-SAUT
+           MOVE L5       TO LIG-EDIT
+           WRITE ENR-EDIT
+
+       * SAUVEGARDE DU BATIMENT
+            MOVE HVD-LIE    TO RES-LIE
+            .
+
+       * EDITION DE LA LIGNE DETAIL
+        LIGNE-DETAIL.
+            MOVE HVE-MAT    TO ED-MAT
+            MOVE HVE-NOM    TO ED-NOM
+            MOVE HVD-NOD    TO ED-NOD
+            MOVE HVD-NDE    TO ED-NDE
+            MOVE ' '        TO CAR-SAUT
+            MOVE L6         TO LIG-EDIT
+            WRITE ENR-EDIT
+            .
+
+       * LECTURE DU CURSEUR LISTE
+        FETCH-LISTE.
+            EXEC SQL
+             FETCH LISTE INTO
+                  :HVE-MAT,
+                  :HVE-NOM,
+                  :HVD-NOD,
+                  :HVD-NDE,
+                  :HVD-LIE
+            END-EXEC
+            EVALUATE SQLCODE
+             WHEN ZEROES
+                  ADD 1 TO CPT-EMPL
+             WHEN +100
+                  SET FIN-LISTE TO TRUE
+             WHEN OTHER
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY 'ERREUR FETCH CURSEUR LISTE, SQLCODE : '
+                       ED-SQLCODE
+               PERFORM FIN-ERREUR
+            END-EVALUATE
+            .
+
+        FIN-ERREUR.
+            MOVE 15 TO RETURN-CODE
+            PERFORM FIN
+            .
+
+        FIN.
+            DISPLAY 'NB EMPL LUS : ' CPT-EMPL
+            CLOSE EDIT
+            EXEC SQL CLOSE LISTE END-EXEC
+            STOP RUN
+            .
+
+
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API7DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
+//*
+//PROCLIB JCLLIB ORDER=SDJ.FORM.PROCLIB
+//*
+//        SET SYSUID=API7,
+//            NOMPGM=DB2P2
+//*
+//APPROC  EXEC COMPDB2 
+//STEPDB2.SYSLIB   DD DSN=API7.SOURCE.DCLGEN,DISP=SHR
+//                 DD DSN=API7.SOURCE.COPY,DISP=SHR
+//STEPDB2.SYSIN    DD DSN=API7.SOURCE.DB2(DB2P2),DISP=SHR
+//STEPDB2.DBRMLIB  DD DSN=API7.SOURCE.DBRMLIB(DB2P2),DISP=SHR
+//STEPLNK.SYSLMOD  DD DSN=API7.SOURCE.PGMLIB(DB2P2),DISP=SHR
+//*
+//*--- ETAPE DE BIND --------------------------------------
+//*
+//BIND    EXEC PGM=IKJEFT01,COND=(4,LT)
+//*DBRMLIB         DD DSN=&SYSUID..DB2.DBRMLIB,DISP=SHR
+//DBRMLIB          DD DSN=API7.SOURCE.DBRMLIB,DISP=SHR
+//SYSTSPRT         DD SYSOUT=*,OUTLIM=25000
+//SYSTSIN          DD *
+  DSN SYSTEM (DSN1)
+  BIND PLAN      (DB2P2) -
+       QUALIFIER (API7)     -
+       ACTION    (REPLACE) -
+       MEMBER    (DB2P2) -
+       VALIDATE  (BIND)    -
+       ISOLATION (CS)      -
+       ACQUIRE   (USE)     -
+       RELEASE   (COMMIT)  -
+       EXPLAIN   (NO)
+//*
+//* DELETE DU FICHIER D'EDITION
+//DEL      EXEC PGM=IDCAMS
+//SYSPRINT DD   SYSOUT=*
+//SYSIN    DD   *
+  DELETE API7.EDITION
+  SET MAXCC = 0
+//*
+//* EXECUTION DU PROGRAMME
+//STEPRUN  EXEC PGM=IKJEFT01,COND=(4,LT)
+//STEPLIB  DD DSN=API7.SOURCE.PGMLIB,DISP=SHR
+//EDIT     DD  DSN=API7.EDITION,DISP=(,CATLG,DELETE),
+//         DCB=(DSORG=PS,RECFM=FB,LRECL=133),
+//         SPACE=(TRK,(1))
+//SYSOUT   DD  SYSOUT=*,OUTLIM=1000
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=2500
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(DB2P2) PLAN (DB2P2) PARMS('11001')
+//
+
+
+
+#*******************************************************************#
+#                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
+#*******************************************************************#
+NB EMPL LUS : 7
+
+
+
+#*******************************************************************#
+#                          FICHIER D'EDITION                        #
+#*******************************************************************#
+
+********************************* Top of Data **********************************
+1                              LISTE DES EMPLOYES         LE 26/04/2023
+                               ------------------
+0BATIMENT : BAT1
+ MAT   NOM EMPL   NUM DEPT   NOM DEPT
+ ---   --------   --------   --------
+ 40    JAVA       C04        COMPTA
+0BATIMENT : BAT2
+ MAT   NOM EMPL   NUM DEPT   NOM DEPT
+ ---   --------   --------   --------
+ 30    BARI       P02        COMMER
+ 50    CICS       P02        COMMER
+ 70    NOEL       P02        COMMER
+ 10    DURAND     E10        PAIE
+0BATIMENT : BAT3
+ MAT   NOM EMPL   NUM DEPT   NOM DEPT
+ ---   --------   --------   --------
+ 20    DUPOND     P01        INFO
+ 60    PARIS      P01        INFO
+******************************** Bottom of Data ********************************

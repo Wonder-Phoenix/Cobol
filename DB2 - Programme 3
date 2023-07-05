@@ -1,0 +1,263 @@
+#********************************************************************************************************************#
+#  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P3 qui met à jour la table EMPLOYE en     #
+#           augmentant le salaire des employés en fonction du département dans lequel il travaille.                  #
+#********************************************************************************************************************#
+
+# 1) Augmentation de salaire :
+#1 -  département COMMER : augmentation du salaire de 10% et augmentation de la commission de 1000,
+#2 -  département PAIE et COMPTA : augmentation du salaire de 15%,
+#3 -  département INFO : augmentation du salaire de 20% et augmentation de la commission de 1500
+
+# 2) Création du département Marketing : - NOD = 'M01'
+#1 - NDE = 'MARKET'
+#2 - LIE = 'BAT1'
+#3 - CHE = 70
+
+# 3) Changement du chef du département COMMER, le nouveau chef est BARI
+
+# Programme DB2P3 + JCL + SYSOUT + EDITION
+
+
+
+#*******************************************************************#
+#                            PROGRAMME                              #
+#*******************************************************************#
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. DB2P3.
+       AUTHOR. SV.
+       DATE-WRITTEN. 26/04/2023.
+      ******************************************************************
+      *  FONCTION DU PROGRAMME: MISE A JOUR DES TABLES EMPLOYE ET      * 
+      *                         DEPARTEMENT                            *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      * DECLARATION DE LA TABLE DEPARTEMENT
+           EXEC SQL INCLUDE DEPT    END-EXEC.
+           
+      * DECLARATION DE LA TABLE EMPLOYE
+           EXEC SQL INCLUDE EMPLOYE END-EXEC.
+           
+      * DECLARATION DE LA SQLCA
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+           
+      * DECLARATION DES HOST-VARIABLES DU DEPARTEMENT
+       01  HVD-DEPARTEMENT.
+           05 HVD-NOD           PIC X(3)
+           05 HVD-NDE           PIC X(6).
+           05 HVD-LIE           PIC X(4).
+           05 HVD-CHE           PIC X(3).
+
+      * DECLARATION DES HOST-VARIABLES DE L'EMPLOYE
+       01  HVE-EMPLOYE.
+           05 HVE-MAT           PIC X(3).
+           05 HVE-NOM           PIC X(7).
+           05 HVE-NOD           PIC X(3).
+           05 HVE-SAL           PIC S9(5)V99 COMP-3.
+           05 HVE-COM           PIC S9(5)V99 COMP-3.
+           05 HVE-DAT           PIC X(10).
+
+      * SQLCODE AU FORMAT EDITION
+       01  ED-SQLCODE        PIC +(10)    VALUE ZEROES.
+       01  ED-SQLERRD        PIC +(10)    VALUE ZEROES.
+       
+       PROCEDURE DIVISION.
+      * 1) AUGMENTATION DU SALAIRE DES EMPLOYES DU DEPARTEMENT COMMER
+      * DE 10% ET AUGMENTATION DE LA COMMISSION DE 1000
+            EXEC SQL
+             UPDATE EMPLOYE
+             SET
+                SAL = SAL * 1.1,
+                COM = VALUE(COM, 0) + 1000
+             WHERE NOD =
+                   (SELECT NOD FROM DEPARTEMENT WHERE NDE = 'COMMER')
+            END-EXEC
+            
+            IF SQLCODE = ZEROES
+               MOVE SQLERRD(3) TO ED-SQLERRD
+               DISPLAY 'DEPARTEMENT COMMER'
+               DISPLAY 'NB EMPLOYES MAJ : ' ED-SQLERRD
+            ELSE
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY 'ERREUR UPDATE EMPLOYE, SQLCODE : '
+               ED-SQLCODE
+               PERFORM FIN-ERREUR
+            END-IF
+            
+      * DEPARTEMENT PAIE ET COMPTA : AUGMENTATION DU SALAIRE DE 15%
+            EXEC SQL
+             UPDATE EMPLOYE
+             SET
+                SAL = SAL * 1.15
+             WHERE NOD IN
+               (SELECT NOD FROM DEPARTEMENT WHERE NDE = 'COMPTA'
+                                               OR NDE = 'PAIE')
+            END-EXEC
+            
+            IF SQLCODE = ZEROES
+               MOVE SQLERRD(3) TO ED-SQLERRD
+               DISPLAY SPACES
+               DISPLAY 'DEPARTEMENTS PAIE ET COMPTA'
+               DISPLAY 'NB EMPLOYES MAJ : ' ED-SQLERRD
+            ELSE
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY 'ERREUR UPDATE EMPLOYE, SQLCODE : '
+               ED-SQLCODE
+               PERFORM FIN-ERREUR
+            END-IF
+            
+      * DEPARTEMENT INFO : AUGMENTATION DU SALAIRE DE 20% ET
+      * AUGMENTATION DE LA COMMISSION DE 1500
+            EXEC SQL
+             UPDATE EMPLOYE
+             SET
+                SAL = SAL * 1.20,
+                COM = VALUE(COM, 0) + 1500
+             WHERE NOD =
+               (SELECT NOD FROM DEPARTEMENT WHERE NDE = 'INFO')
+            END-EXEC
+            
+            IF SQLCODE = ZEROES
+               MOVE SQLERRD(3) TO ED-SQLERRD
+               DISPLAY SPACES
+               DISPLAY 'DEPARTEMENT INFO'
+               DISPLAY 'NB EMPLOYES MAJ : ' ED-SQLERRD
+            ELSE
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY 'ERREUR UPDATE EMPLOYE, SQLCODE : '
+               ED-SQLCODE
+               PERFORM FIN-ERREUR
+            END-IF
+            
+      * 2) CREATION DU DEPARTEMENT MARKETING
+            EXEC SQL
+             INSERT INTO DEPARTEMENT
+             VALUES
+             ('M01',
+              'MARKET',
+              'BAT1',
+              '70')
+            END-EXEC
+            
+            IF SQLCODE = ZEROES
+               DISPLAY SPACES
+               DISPLAY 'CREATION DU DEPARTEMENT MARKET'
+            ELSE
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY 'ERREUR INSERT DEPARTEMENT, SQLCODE : '
+               ED-SQLCODE
+               PERFORM FIN-ERREUR
+            END-IF
+
+      * 3) CHANGEMENT DU CHEF DU DéPARTEMENT COMMER, LE NOUVEAU CHEF
+      * ET BARI
+            EXEC SQL
+               UPDATE DEPARTEMENT
+               SET
+                CHE =
+                (SELECT MAT FROM EMPLOYE WHERE NOM = 'BARI')
+               WHERE NDE = 'COMMER'
+            END-EXEC
+            
+            IF SQLCODE = ZEROES
+               DISPLAY SPACES
+               DISPLAY 'MODIFICATION DU CHEF DU DEPARTEMENT COMMER'
+            ELSE
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY 'ERREUR UPDATE DEPARTEMENT, SQLCODE : '
+               ED-SQLCODE
+               PERFORM FIN-ERREUR
+            END-IF
+            
+       PERFORM FIN
+       .
+      
+       FIN-ERREUR.
+         MOVE 15 TO RETURN-CODE
+         PERFORM FIN
+         .
+      
+       FIN.
+         STOP RUN.
+
+
+         
+        
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API7DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
+//*
+//PROCLIB  JCLLIB ORDER=SDJ.FORM.PROCLIB
+//*
+//         SET SYSUID=API7,
+//             NOMPGM=DB2P3
+//*
+//APPROC   EXEC  COMPDB2
+//STEPDB2.SYSLIB     DD DSN=API7.SOURCE.DCLGEN,DISP=SHR
+//                   DD DSN=API7.SOURCE.COPY,DISP=SHR
+//STEPDB2.SYSIN      DD DSN=API7.SOURCE.DB2(DB2P3),DISP=SHR
+//STEPDB2.DBRMLIB    DD DSN=API7.SOURCE.DBRMLIB(DB2P3),DISP=SHR
+//STEPLNK.SYSLMOD    DD DSN=API7.SOURCE.PGMLIB(DB2P3),DISP=SHR
+//*
+//*--- ETAPE DE BIND --------------------------------------
+//*
+//BIND     EXEC PGM=IKJEFT01,COND=(4,LT)
+//*DBRMLIB  DD  DSN=&SYSUID..DB2.DBRMLIB,DISP=SHR
+//DBRMLIB  DD  DSN=API7.SOURCE.DBRMLIB,DISP=SHR
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=25000
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  BIND PLAN      (DB2P3) -
+       QUALIFIER (API7)     -
+       ACTION    (REPLACE) -
+       MEMBER    (DB2P3) -
+       VALIDATE  (BIND)    -
+       ISOLATION (CS)      -
+       ACQUIRE   (USE)     -
+       RELEASE   (COMMIT)  -
+       EXPLAIN   (NO)
+//*
+//* EXECUTION DU PROGRAMME
+//STEPRUN  EXEC PGM=IKJEFT01,COND=(4,LT)
+//STEPLIB  DD DSN=API7.SOURCE.PGMLIB,DISP=SHR
+//SYSOUT   DD  SYSOUT=*,OUTLIM=1000
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=2500
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(DB2P3) PLAN (DB2P3) PARMS('11001')
+//
+**************************** Bottom of Data ****************************        
+
+
+
+#*******************************************************************#
+#                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
+#*******************************************************************#
+
+DEPARTEMENT COMMER
+NB EMPLOYES MAJ :         +3
+
+DEPARTEMENTS PAIE ET COMPTA
+NB EMPLOYES MAJ :         +2
+
+DEPARTEMENT INFO
+NB EMPLOYES MAJ :         +2
+
+CREATION DU DEPARTEMENT MARKET
+
+MODIFICATION DU CHEF DU DEPARTEMENT COMMER
+
+
+
+
+
+
