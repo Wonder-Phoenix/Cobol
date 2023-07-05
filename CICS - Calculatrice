@@ -1,0 +1,391 @@
+#MAP d'une calculatrice ; Gestion de :
+# - l'addition             Touche ENTER
+# - la soustraction        Touche PF4
+# - la multiplication      Touche PF5
+# - la division            Touche PF6
+# - Sortie de transaction  Touche PF12
+
+
+*                                                                       00000100
+* MAP DE MA CALCULETTE                                                  00000100
+*                                                                       00000100
+        PRINT NOGEN
+CALC4   DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,                    X00000100
+               CTRL=(FREEKB,FRSET),STORAGE=AUTO,TIOAPFX=YES             00000200
+CALC4   DFHMDI COLUMN=1,LINE=1,SIZE=(24,80),MAPATTS=(COLOR,HILIGHT),   X00000210
+               DSATTS=(COLOR,HILIGHT),CURSLOC=YES
+TERM1   DFHMDF POS=(1,1),ATTRB=ASKIP,LENGTH=14
+DAT1    DFHMDF POS=(1,70),ATTRB=ASKIP,LENGTH=10
+*
+        DFHMDF POS=(2,29),COLOR=TURQUOISE,                             X00000211
+               ATTRB=ASKIP,LENGTH=12,                                  X00000220
+               INITIAL='CALCULATRICE'                                   00000300
+*
+HEUR1   DFHMDF POS=(2,75),ATTRB=ASKIP,LENGTH=5
+*
+        DFHMDF POS=(3,29),COLOR=TURQUOISE,                             X00000211
+               ATTRB=ASKIP,LENGTH=12,                                  X00000220
+               INITIAL='~~~~~~~~~~~~'                                   00000300
+*
+        DFHMDF POS=(7,20),COLOR=TURQUOISE,                             X00000211
+               ATTRB=ASKIP,LENGTH=10,                                  X00000220
+               INITIAL='NOMBRE 1 :'                                     00000300
+NB1     DFHMDF POS=(7,31),COLOR=NEUTRAL,HILIGHT=UNDERLINE,             X00000400
+               ATTRB=(UNPROT,NUM,IC,FSET),LENGTH=3                      00000410
+        DFHMDF POS=(7,35),ATTRB=ASKIP,LENGTH=1
+*
+        DFHMDF POS=(9,20),COLOR=TURQUOISE,                             X00000211
+               ATTRB=ASKIP,LENGTH=10,                                  X00000220
+               INITIAL='NOMBRE 2 :'                                     00000300
+NB2     DFHMDF POS=(9,31),COLOR=NEUTRAL,HILIGHT=UNDERLINE,             X00000400
+               ATTRB=(UNPROT,NUM,FSET),LENGTH=3                         00000410
+        DFHMDF POS=(9,35),ATTRB=ASKIP,LENGTH=1
+*
+        DFHMDF POS=(12,20),COLOR=TURQUOISE,                            X00000211
+               ATTRB=ASKIP,LENGTH=10,                                  X00000220
+               INITIAL='RESULTAT :'                                     00000300
+TOT     DFHMDF POS=(12,31),COLOR=NEUTRAL,                              X00000400
+               ATTRB=ASKIP,LENGTH=9                                     00000410
+*
+OPE     DFHMDF POS=(13,20),COLOR=NEUTRAL,                              X00000400
+               ATTRB=ASKIP,LENGTH=14                                    00000410
+*
+MSG     DFHMDF POS=(23,1),ATTRB=ASKIP,LENGTH=79,COLOR=RED
+*
+        DFHMDF POS=(24,1),ATTRB=ASKIP,LENGTH=79,COLOR=GREEN,           X
+               INITIAL='ENTER=ADDITION  F4=SOUSTRACTION  F5=MULTIPLICATX
+               ION  F6=DIVISION  F12=FIN'
+        DFHMSD TYPE=FINAL                                               00000800
+        END                                                             00000900
+
+
+PROGRAMME :
+
+      *======================================================*
+      *   I D E N T I F I C A T I O N     D I V I S I O N    *
+      *======================================================*
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PCALC4.
+
+      *======================================================*
+      *   E N V I R O N M E N T       D I V I S I O N        *
+      *======================================================*
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER. IBM-390.
+       OBJECT-COMPUTER. IBM-390.
+
+      *======================================================*
+      *           D A T A         D I V I S I O N            *
+      *======================================================*
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+
+      *------------------------------------------------------*
+      *   DESCRIPTION VARIABLES SERVANT AUX CALCULS          *
+      *------------------------------------------------------*
+       01 WS-NB1                  PIC 9(3).
+       01 WS-NB2                  PIC 9(3).
+       01 WS-TOT                  PIC 9(6).
+       01 ED-TOT                  PIC Z(5)9.
+       01 WS-TOT-DIV              PIC 9(6)V99.
+       01 ED-TOT-DIV              PIC Z(5)9V99.
+
+      *------------------------------------------------------*
+      *   DESCRIPTION DETAILLEE DE LA ZONE DE COMMUNICATION  *
+      *------------------------------------------------------*
+       01  WS-COMMAREA.
+           05 PROG-PRECEDENT      PIC X(8).
+           05 PROG-COURANT        PIC X(8).
+           05 PROG-SUIVANT        PIC X(8).
+           05 FILLER              PIC X(40).
+
+       01 C-R                     PIC S9(8) COMP.
+
+       01 MON-PROG                PIC X(8) VALUE 'PCALC4'.
+       01 MA-MAP                  PIC X(8) VALUE 'CALC4'.
+       01 MA-MAPSET               PIC X(8) VALUE 'CALC4'.
+       01 MA-TRX                  PIC X(4) VALUE 'CAL4'.
+      *------------------------------------------------------*
+      *   DESCRIPTION   DE   LA   MAP                        *
+      *------------------------------------------------------*
+       COPY CALC4.
+
+      *------------------------------------------------------*
+      *   ZONE DE MESSAGE TAMPON POUR LE SEND FROM           *
+      *------------------------------------------------------*
+       01  MESSAGE-TXT            PIC X(79).
+
+      *------------------------------------------------------*
+      *   DESCRIPTION   DES  TOUCHES   FONCTIONS             *
+      *------------------------------------------------------*
+       COPY DFHAID.
+
+      *------------------------------------------------------*
+      *   DESCRIPTION   DES  ATTRIBUTS                       *
+      *------------------------------------------------------*
+       COPY DFHBMSCA.
+
+      *======================================================*
+      *          L I N K A G E     S E C T I O N             *
+      *======================================================*
+
+       LINKAGE SECTION.
+       01  DFHCOMMAREA.
+           05 LK-COMMAREA            PIC X(64).
+
+      *======================================================*
+      *     P R O C E D U R E     D I V I S I O N            *
+      *======================================================*
+
+       PROCEDURE DIVISION.
+       00000-INIT-PROGRAMME.
+      *---------------------*
+            PERFORM  10000-DEBUT-PROGRAMME
+            PERFORM  20000-TRAIT-PROGRAMME
+            GOBACK.
+
+       10000-DEBUT-PROGRAMME.
+      *---------------------*
+      *   TEST DE PREMIERE ENTREE DANS LE PROGRAMME
+           IF EIBCALEN = 0
+              INITIALIZE      WS-COMMAREA
+           ELSE
+              MOVE LK-COMMAREA  TO WS-COMMAREA
+           END-IF
+
+           MOVE  PROG-COURANT     TO  PROG-PRECEDENT
+           MOVE  MON-PROG         TO  PROG-COURANT
+           .
+
+       20000-TRAIT-PROGRAMME.
+      *---------------------*
+           IF PROG-PRECEDENT  NOT =  PROG-COURANT
+              PERFORM  21000-TRAIT-CHARGEMENT
+              PERFORM  22000-TRAIT-ENVOI
+           ELSE
+              PERFORM  23000-TRAIT-RECEPTION
+           END-IF
+           .
+
+       21000-TRAIT-CHARGEMENT.
+      *----------------------*
+      *  CHARGEMENT DE LA MAP AVANT AFFICHAGE
+           MOVE LOW-VALUE TO CALC4O
+
+      *  SI TRAITEMENT PARTICULIER AVANT AFFICHAGE
+           PERFORM  21100-TRAIT-SPECIFIQUE
+           .
+
+       21100-TRAIT-SPECIFIQUE.
+      *----------------------*
+           CONTINUE
+      *    ..............................
+      *    ..............................
+      *    ..............................
+           .
+
+
+       22000-TRAIT-ENVOI.
+      *-----------------*
+           EXEC CICS SEND MAP    (MA-MAP)
+                          FROM   (CALC4O)
+                          ERASE
+           END-EXEC
+
+           MOVE PROG-COURANT TO PROG-SUIVANT
+
+           EXEC CICS RETURN TRANSID  (MA-TRX)
+                            COMMAREA (WS-COMMAREA)
+                            LENGTH   (LENGTH OF WS-COMMAREA)
+           END-EXEC
+           .
+
+       23000-TRAIT-RECEPTION.
+      *---------------------*
+           EVALUATE EIBAID
+              WHEN DFHENTER
+                   PERFORM  23100-TRAIT-ENTER
+              WHEN DFHPF4
+                   PERFORM  23100-TRAIT-F4
+              WHEN DFHPF5
+                   PERFORM  23100-TRAIT-F5
+              WHEN DFHPF6
+                   PERFORM  23100-TRAIT-F6
+              WHEN DFHPF12
+                   PERFORM  23200-TRAIT-FIN
+              WHEN OTHER
+                   PERFORM  90000-ERR-TOUCHE
+           END-EVALUATE
+           .
+
+       23110-PROG-SUIVANT.
+      *------------------*
+      *    IF  ......................
+      *       MOVE '?????'   TO  PROG-SUIVANT
+      *    END-IF
+      *
+           EXEC CICS XCTL  PROGRAM  (PROG-SUIVANT)
+                           COMMAREA (WS-COMMAREA)
+                           LENGTH   (LENGTH OF WS-COMMAREA)
+           END-EXEC
+           .
+
+       23100-TRAIT-ENTER.
+      *------------------*
+           EXEC CICS RECEIVE MAP  (MA-MAP)
+                             INTO (CALC4I)
+                             MAPSET (MA-MAPSET)
+                             RESP (C-R)
+           END-EXEC
+
+           EVALUATE C-R
+              WHEN DFHRESP(NORMAL)
+                   CONTINUE
+              WHEN DFHRESP(MAPFAIL)
+                   CONTINUE
+              WHEN OTHER
+                   PERFORM 91000-ERREUR-CICS
+           END-EVALUATE
+
+           MOVE SPACES TO TOTO
+           MOVE NB1I TO WS-NB1
+           MOVE NB2I TO WS-NB2
+           COMPUTE WS-TOT = WS-NB1 + WS-NB2
+           MOVE WS-TOT TO ED-TOT
+           MOVE ED-TOT TO TOTO
+           MOVE 'ADDITION' TO OPEO
+
+           PERFORM 22000-TRAIT-ENVOI
+           .
+
+       23100-TRAIT-F4.
+      *------------------*
+           EXEC CICS RECEIVE MAP  (MA-MAP)
+                             INTO (CALC4I)
+                             MAPSET (MA-MAPSET)
+                             RESP (C-R)
+           END-EXEC
+
+           EVALUATE C-R
+              WHEN DFHRESP(NORMAL)
+                   CONTINUE
+              WHEN DFHRESP(MAPFAIL)
+                   CONTINUE
+              WHEN OTHER
+                   PERFORM 91000-ERREUR-CICS
+           END-EVALUATE
+
+           MOVE SPACES TO TOTO
+           MOVE NB1I TO WS-NB1
+           MOVE NB2I TO WS-NB2
+
+           IF WS-NB2 > WS-NB1
+              MOVE 'NOMBRE 2 > NOMBRE 1, RECOMMENCEZ' TO MSGO
+           ELSE
+              COMPUTE WS-TOT = WS-NB1 - WS-NB2
+              MOVE WS-TOT TO ED-TOT
+              MOVE ED-TOT TO TOTO
+              MOVE 'SOUSTRACTION' TO OPEO
+           END-IF
+
+           PERFORM 22000-TRAIT-ENVOI
+           .
+
+       23100-TRAIT-F5.
+      *------------------*
+           EXEC CICS RECEIVE MAP  (MA-MAP)
+                             INTO (CALC4I)
+                             MAPSET (MA-MAPSET)
+                             RESP (C-R)
+           END-EXEC
+
+           EVALUATE C-R
+              WHEN DFHRESP(NORMAL)
+                   CONTINUE
+              WHEN DFHRESP(MAPFAIL)
+                   CONTINUE
+              WHEN OTHER
+                   PERFORM 91000-ERREUR-CICS
+           END-EVALUATE
+
+           MOVE SPACES TO TOTO
+           MOVE NB1I TO WS-NB1
+           MOVE NB2I TO WS-NB2
+
+           IF WS-NB1 = 0 OR WS-NB2 = 0
+              MOVE 'MULTIPLICATION PAR 0, RECOMMENCEZ' TO MSGO
+           ELSE
+              COMPUTE WS-TOT = WS-NB1 * WS-NB2
+              MOVE WS-TOT TO ED-TOT
+              MOVE ED-TOT TO TOTO
+              MOVE 'MULTIPLICATION' TO OPEO
+           END-IF
+
+           PERFORM 22000-TRAIT-ENVOI
+           .
+
+       23100-TRAIT-F6.
+      *------------------*
+           EXEC CICS RECEIVE MAP  (MA-MAP)
+                             INTO (CALC4I)
+                             MAPSET (MA-MAPSET)
+                             RESP (C-R)
+           END-EXEC
+
+           EVALUATE C-R
+              WHEN DFHRESP(NORMAL)
+                   CONTINUE
+              WHEN DFHRESP(MAPFAIL)
+                   CONTINUE
+              WHEN OTHER
+                   PERFORM 91000-ERREUR-CICS
+           END-EVALUATE
+
+           MOVE SPACES TO TOTO
+           MOVE NB1I TO WS-NB1
+           MOVE NB2I TO WS-NB2
+
+           IF WS-NB1 = 0 OR WS-NB2 = 0
+              MOVE 'LES NOMBRES DOIVENT ETRE > 0, RECOMMENCEZ !'
+                   TO MSGO
+           ELSE
+              COMPUTE WS-TOT-DIV = WS-NB1 / WS-NB2
+              MOVE WS-TOT-DIV TO ED-TOT-DIV
+      *       MOVE ED-TOT-DIV TO TOTO
+              STRING ED-TOT-DIV(1:6) ',' ED-TOT-DIV(7:2)
+                    DELIMITED BY SIZE
+                    INTO TOTO
+              END-STRING
+              MOVE 'DIVISION' TO OPEO
+           END-IF
+
+           PERFORM 22000-TRAIT-ENVOI
+           .
+
+       23200-TRAIT-FIN.
+      *---------------*
+           MOVE 'FIN DE LA TRANSACTION' TO MESSAGE-TXT
+           PERFORM   99000-FIN-CICS.
+
+
+       90000-ERR-TOUCHE.
+      *----------------*
+           MOVE 'TOUCHE DE FONCTION INVALIDE' TO MSGO
+           PERFORM  22000-TRAIT-ENVOI.
+
+
+       91000-ERREUR-CICS.
+      *-------------------*
+           MOVE 'ERREUR CICS !!!  FIN DE LA TRANSACTION' TO MESSAGE-TXT
+           PERFORM   99000-FIN-CICS.
+
+       99000-FIN-CICS.
+      *--------------*
+           EXEC CICS SEND FROM   (MESSAGE-TXT)
+                          LENGTH (LENGTH OF MESSAGE-TXT)
+                          ERASE
+           END-EXEC
+
+           EXEC CICS RETURN END-EXEC
+           .

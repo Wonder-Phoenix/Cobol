@@ -1,0 +1,306 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.   BAC3.
+       AUTHOR.       HERVE.
+       DATE-WRITTEN. 31/05/2023.
+      ******************************************************************
+      *                                                                *
+      *               EDITION : OPERATIONS SUR COMPTE                  *
+      *                                                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      * DECLARATION DU FICHIER
+           SELECT BAC3ED ASSIGN BAC3ED
+               ORGANIZATION IS SEQUENTIAL
+               ACCESS MODE IS SEQUENTIAL
+               FILE STATUS FS-BAC3ED.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD BAC3ED
+           RECORDING MODE IS F.
+       01 ENR-BAC3ED       PIC X(132).
+
+       WORKING-STORAGE SECTION.
+      * DECLARATION DE VARIABLES DE GROUPE ET ELEMENTAIRE
+       01 FS-BAC3ED              PIC 99.
+
+      * DECLARATION DE LA TABLE BAC_CLIENT
+           EXEC SQL INCLUDE BCLIENT END-EXEC.
+      * DECLARATION DE LA TABLE BAC_STATUT
+           EXEC SQL INCLUDE BSTATUT END-EXEC.
+      * DECLARATION DE LA TABLE BAC_CPTCLI
+           EXEC SQL INCLUDE BCPTCLI END-EXEC.
+      * DECLARATION DE LA TABLE BAC_COMPTE
+           EXEC SQL INCLUDE BCOMPTE END-EXEC.
+      * DECLARATION DE LA TABLE BAC_OPER
+           EXEC SQL INCLUDE BOPER   END-EXEC.
+
+      * DECLARATION SQLCA
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+
+
+      * ECRITURE DE L'ORDRE POUR LISTER LES CHAMPS DES TABLES
+      * BAC_OPER ET CLIENT A AVEC LE CURSOR LISTE
+           EXEC SQL DECLARE LISTE CURSOR FOR
+            SELECT  OP.NUMOPE,OP.NUMCPT,OP.APPEME,OP.TEXTE0,
+            OP.MTTOPE,VALUE(OP.MTTCOM,0),OP.DATOPE,
+            VALUE(CLI.NOM000,' '),VALUE(CLI.PRENOM,' '),CLI.NUMCLI
+            FROM API0.BAC_CLIENT CLI
+            JOIN API0.BAC_CPTCLI CPT
+            ON CLI.NUMCLI = CPT.NUMCLI
+            JOIN API0.BAC_OPER OP
+            ON CPT.NUMCPT = OP.NUMCPT
+            ORDER BY NUMCPT
+           END-EXEC
+
+      * HOST VARIABLE DE LA TABLE BAC_CLIENT
+       01 HVCLI-CLIENT.
+          05 HVCLI-NUMCLI       PIC S9(4) USAGE COMP.
+          05 HVCLI-STATUT       PIC X.
+          05 HVCLI-TYPCLI       PIC X.
+          05 HVCLI-NOM000       PIC X(15).
+          05 HVCLI-PRENOM       PIC X(15).
+          05 HVCLI-VILLE0       PIC X(15).
+          05 HVCLI-CDPOST       PIC S9(5)V USAGE COMP-3.
+          05 HVCLI-DATENT       PIC X(10).
+          05 HVCLI-DATMAJ       PIC X(10).
+
+      * HOST VARIABLE DE LA TABLE BAC_OPER
+       01 HVO-OPER.
+          05 HVO-NUMOPE         PIC S9(4) USAGE COMP.
+          05 HVO-NUMCPT         PIC S9(4) USAGE COMP.
+          05 HVO-APPEME         PIC X(3).
+          05 HVO-TEXTE0         PIC X(80) VALUE SPACES.
+          05 HVO-MTTOPE         PIC S9(9)V99 USAGE COMP-3.
+          05 HVO-MTTCOM         PIC S9(9)V99 USAGE COMP-3.
+          05 HVO-DATOPE         PIC X(10).
+
+      * NOM CONDITION DE FIN DE LECTURE DES TABLE DB2
+       01 FINDB2                PIC 9.
+          88 FIN-DB2                      VALUE 1.
+
+      * GROUPE DE VARIABLE DE DATE
+       01  WS-TODAY.
+               05  WS-YEAR            PIC  9(4).
+               05  WS-MONTH           PIC  9(2).
+               05  WS-DAY             PIC  9(2).
+
+      * VARIABLE DE CONCATENATION DU NOM ET PRENOM
+       01 WS-NOM-PRENOM         PIC X(30).
+
+      * VARIABLE DE MEMORISATION DU NUMERO DE COMPTE
+       01 WS-MEMOVAR            PIC S9(4) USAGE COMP.
+
+      * VARIABLE DE CONVERSION DU MONTANT DE L'OPERATION
+       01 WS-MONTANT            PIC S9(9)V99 USAGE COMP-3.
+
+      ******************************************************************
+      *                                                                *
+      *                L I G N E S   D ' E D I T I O N S               *
+      *                                                                *
+      ******************************************************************
+      * LIGNE 1 : TITRE ET DATE
+       01 L1.
+           05                PIC X(26)       VALUE SPACE.
+           05 L1-TITRE       PIC X(33)
+           VALUE 'EDITION DES OPERATIONS SUR COMPTE'.
+           05                PIC X(11)       VALUE SPACE.
+           05 L1-LE          PIC X(5)        VALUE 'LE : '.
+           05 L1-DATE.
+               10  WS-JOUR            PIC  X(2).
+               10                     PIC X   VALUE '/'.
+               10  WS-MOIS            PIC  X(2).
+               10                     PIC X   VALUE '/'.
+               10  WS-ANNEE            PIC  X(4).
+
+      * LIGNE 2 : SEPARATION AVEC TIRETS
+       01 L2.
+           05                PIC X(26)       VALUE SPACE.
+           05                PIC X(33)       VALUE ALL '-'.
+
+      * LIGNE 3 : SEPARATION AVEC ESPACES
+       01 L3.
+           05                PIC X.
+
+      * LIGNE 4 : INTITULE COMPTE ET VALEUR NUMERO DE COMPTE
+       01 L4.
+           05 L4-COMPTE      PIC X(9)        VALUE 'COMPTE : '.
+           05 L4-NUMCPT      PIC 99.
+
+      * LIGNE 5 : INTITULE CLIENT ET VALEUR NUMERO DE CLIENT
+       01 L5.
+           05 L5-CLIENT      PIC X(9)        VALUE 'CLIENT : '.
+           05 L5-NOM-PRENOM  PIC X(30).
+
+      * LIGNE 6 : INTITULES DE CHAQUE COLONNE
+       01 L6.
+           05 L6-NUMOPE      PIC X(6)        VALUE 'NUMOPE'.
+           05                PIC X           VALUE SPACE.
+           05 L6-TEXTE       PIC X(50)
+           VALUE '      TEXTE                                       '.
+           05                PIC X           VALUE SPACE.
+           05 L6-MONTANT     PIC X(12)       VALUE ' MONTANT'.
+           05 L6-DATE        PIC X(10)       VALUE ' DATE'.
+
+      * INSCRIPTIONS DES VALEURS DANS CHAQUE COLONNE
+       01 L7.
+           05 L7-NUMOPE      PIC X(6)        VALUE ALL '-'.
+           05                PIC X           VALUE SPACE.
+           05 L7-TEXTE       PIC X(50)       VALUE ALL '-'.
+           05                PIC X           VALUE SPACE.
+           05 L7-MONTANT     PIC X(12)       VALUE ALL '-'.
+           05                PIC X           VALUE SPACE.
+           05 L7-DATE        PIC X(10)       VALUE ALL '-'.
+
+      * INSCRIPTIONS DES VALEURS DANS CHAQUE COLONNE
+       01 L8.
+           05 L8-NUMOPE      PIC X(6).
+           05                PIC X           VALUE SPACE.
+           05 L8-TEXTE       PIC X(50).
+           05                PIC X           VALUE SPACE.
+           05 L8-MONTANT     PIC +ZZZZZZZZ9,99.
+           05                PIC X           VALUE SPACE.
+           05 L8-DATE        PIC X(10).
+
+      ******************************************************************
+      *                                                                *
+      *             P R O C E D U R E    D I V I S I O N               *
+      *                                                                *
+      ******************************************************************
+       PROCEDURE DIVISION.
+
+      * TRAITEMENT PRINCIPAL
+           PERFORM DEBUT
+           PERFORM DATE-JOUR
+           PERFORM ECRITURE-BAC3ED
+           PERFORM FIN.
+
+      ******************************************************************
+      *                                                                *
+      *  ETIQUETTE DEBUT :  OUVERTURE FICHIER D'EDITION (NOM : BAC3ED) *
+      *                     OUVERTURE DU CURSEUR                       *
+      *                                                                *
+      ******************************************************************
+       DEBUT.
+           PERFORM OPEN-BAC3ED
+           PERFORM OPEN-CURSOR
+           .
+
+      * OUVERTURE DU FICHIER BAC3ED
+       OPEN-BAC3ED.
+           OPEN OUTPUT BAC3ED
+           IF FS-BAC3ED NOT = ZERO
+               DISPLAY 'ERREUR OUVERTURE BAC3ED : ' FS-BAC3ED
+               PERFORM FIN
+           END-IF.
+
+      * OUVERTURE DU CURSOR LISTE
+       OPEN-CURSOR.
+           EXEC SQL OPEN LISTE END-EXEC
+           IF SQLCODE NOT = ZERO
+               DISPLAY 'ERREUR OPEN LISTE : ' SQLCODE
+               PERFORM FIN
+           END-IF
+           .
+
+      ******************************************************************
+      *                      C U R S E U R                             *
+      ******************************************************************
+       FETCH-LISTE.
+              EXEC SQL
+                 FETCH LISTE
+                 INTO
+                       :HVO-NUMOPE,
+                       :HVO-NUMCPT,
+                       :HVO-APPEME,
+                       :HVO-TEXTE0,
+                       :HVO-MTTOPE,
+                       :HVO-MTTCOM,
+                       :HVO-DATOPE,
+                       :HVCLI-NOM000,
+                       :HVCLI-PRENOM,
+                       :HVCLI-NUMCLI
+              END-EXEC
+              PERFORM TEST-SQLCODE
+             .
+
+      ******************************************************************
+      *                RECUPERATION DE LA DATE DU JOUR                 *
+      ******************************************************************
+       DATE-JOUR.
+           MOVE FUNCTION CURRENT-DATE (1:8) TO WS-TODAY
+           MOVE WS-DAY   TO WS-JOUR
+           MOVE WS-MONTH TO WS-MOIS
+           MOVE WS-YEAR  TO WS-ANNEE.
+
+      ******************************************************************
+      *            ECRITURE DANS FICHIER EDITION BAC3ED                *
+      ******************************************************************
+       ECRITURE-BAC3ED.
+      * ECRITURE DE L'ENTETE (LIGNE 1 à 3) : TITRE ET DATE
+           DISPLAY L1-DATE
+           WRITE ENR-BAC3ED FROM L1
+           WRITE ENR-BAC3ED FROM L2
+           WRITE ENR-BAC3ED FROM L3
+           PERFORM FETCH-LISTE
+           PERFORM UNTIL FIN-DB2
+      * ECRITURE DU/DES NUMEROS DE COMPTE ET DU NOM ET PRENOM DU CLIENT
+               MOVE HVO-NUMCPT TO WS-MEMOVAR
+               MOVE HVO-NUMCPT TO L4-NUMCPT
+               WRITE ENR-BAC3ED FROM L4
+               STRING HVCLI-NOM000 DELIMITED BY '  '
+                      SPACE DELIMITED BY SIZE
+                      HVCLI-PRENOM DELIMITED BY '  '
+                      INTO L5-NOM-PRENOM
+               END-STRING
+               WRITE ENR-BAC3ED FROM L5
+               WRITE ENR-BAC3ED FROM L3
+               WRITE ENR-BAC3ED FROM L6
+               WRITE ENR-BAC3ED FROM L7
+               PERFORM UNTIL WS-MEMOVAR NOT = HVO-NUMCPT OR FIN-DB2
+      * ECRITURE DES OPERATIONS DES COMPTES DU CLIENT
+                   MOVE HVO-NUMOPE TO L8-NUMOPE
+                   MOVE HVO-TEXTE0 TO L8-TEXTE
+                   MOVE HVO-MTTOPE TO WS-MONTANT
+                   COMPUTE WS-MONTANT = WS-MONTANT * -1
+                   ADD  HVO-MTTCOM TO WS-MONTANT
+                   MOVE WS-MONTANT TO L8-MONTANT
+                   MOVE HVO-DATOPE TO L8-DATE
+                   MOVE HVO-NUMCPT TO WS-MEMOVAR
+                   WRITE ENR-BAC3ED FROM L8
+                   PERFORM FETCH-LISTE
+               END-PERFORM
+               WRITE ENR-BAC3ED FROM L3
+               WRITE ENR-BAC3ED FROM L3
+           END-PERFORM.
+
+      ******************************************************************
+      *                     TEST DU SQLCODE                            *
+      ******************************************************************
+       TEST-SQLCODE.
+           EVALUATE TRUE
+            WHEN SQLCODE = ZEROES
+                DISPLAY 'REQUETE OK ' SQLCODE
+            WHEN SQLCODE = +100
+                DISPLAY ' INCONNU EN TABLE' SQLCODE
+                SET FIN-DB2 TO TRUE
+            WHEN OTHER
+                DISPLAY 'ERREUR SQLCODE : ' SQLCODE
+           END-EVALUATE.
+
+      ******************************************************************
+      *                      ETIQUETTE DE FIN                          *
+      ******************************************************************
+       FIN.
+           EXEC SQL CLOSE LISTE END-EXEC
+           CLOSE BAC3ED
+           STOP RUN.
+
+      *                                                 ////
+      *                                                (OO)
+      *                                          -OOO--(__)--OOO-

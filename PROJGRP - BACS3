@@ -1,0 +1,291 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.   BACS3.
+       AUTHOR.       SOPHIE.
+       DATE-WRITTEN. 08/06/2023.
+      ******************************************************************
+      *                                                                *
+      *        FONCTION DU PROGRAMME : CALCUL DES COMMISSIONS          *
+      *                                                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT BACCNTK ASSIGN TO BACCNTK
+             ORGANIZATION IS INDEXED
+             ACCESS MODE IS DYNAMIC
+             RECORD KEY IS CNTK-NUMCNT
+             ALTERNATE RECORD KEY IS CNTK-NUMCLI WITH DUPLICATES
+             FILE STATUS FS-BACCNTK.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD BACCNTK.
+       01 ZG-BACCNTK.
+          05 CNTK-NUMCNT        PIC X(2).
+          05 CNTK-NUMCLI        PIC X(2).
+          05 CNTK-DATADH        PIC 9(8).
+          05 CNTK-TYPCNT        PIC X.
+          05                    PIC X(7).
+
+       WORKING-STORAGE SECTION.
+      * DECLARATION DE VARIABLES DE GROUPE ET ELEMENTAIRE
+
+       01 SENSOP                PIC X.
+       01 TYPCNT                PIC X.
+
+       01 WS-MTTRANS            PIC S9(9)V9(9).
+       01 WS-TYPCLI             PIC X.
+       01 WS-SOLDE0D            PIC S9(9)V99 USAGE COMP-3.
+       01 WS-SOLDE0C            PIC S9(9)V99 USAGE COMP-3.
+       01 WS-NUMCPTD            PIC S9(4) USAGE COMP.
+       01 WS-TEXTEOPE           PIC X(50).
+       01 WS-MTTCOM             PIC S9(9)V99 USAGE COMP-3.
+
+      * FILE STATUS
+       01 FS-BACCNTK            PIC XX.
+
+      * INDICATEUR D'ERREUR
+       01 INDIC-OK              PIC X.
+          88 OK                         VALUE '1'.
+          88 KO                         VALUE '0'.
+
+       LINKAGE SECTION.
+      * ZONE DE COMMUNICATION
+       01 ZCOMS3.
+          05 ZMTTRANS           PIC S9(9)V9(9).
+          05 ZTYPCLI            PIC X.
+          05 ZMTTCOM            PIC S9(9)V9(2).
+          05 ZNUMCLI            PIC 9(2).
+
+      ******************************************************************
+      *                                                                *
+      *              P R O C E D U R E    D I V I S I O N              *
+      *                                                                *
+      * EN FONCTION DU : TYPCNT = TYPE DE CONTRAT ; 1 = USAGE FREQUENT *
+      *                                             2 = USAGE PONCTUEL *
+      *                                                                *
+      *                  TYPCLI = TYPE DU CLIENT ; P = PARTICULIER     *
+      *                                            E = ENTREPRISE      *
+      *                                                                *
+      *                  SENSOP = SENS DE L'OPERATION ; D = DEBIT      *
+      *                                                 C = CREDIT     *
+      *                                                                *
+      ******************************************************************
+       PROCEDURE DIVISION USING ZCOMS3.
+           PERFORM DEBUT
+             EVALUATE TRUE ALSO TRUE ALSO TRUE
+
+                WHEN TYPCNT = 2 ALSO WS-TYPCLI = 'P' ALSO SENSOP = 'D'
+                PERFORM REGLE1
+
+                WHEN TYPCNT = 2 ALSO WS-TYPCLI = 'P' ALSO SENSOP = 'C'
+                PERFORM REGLE2
+
+                WHEN TYPCNT = 1 ALSO WS-TYPCLI = 'P' ALSO SENSOP = 'D'
+                PERFORM REGLE3
+
+                WHEN TYPCNT = 1 ALSO WS-TYPCLI = 'P' ALSO SENSOP = 'C'
+                PERFORM REGLE4
+
+                WHEN TYPCNT = 2 ALSO WS-TYPCLI = 'E' ALSO SENSOP = 'D'
+                PERFORM REGLE2
+
+                WHEN TYPCNT = 2 ALSO WS-TYPCLI = 'E' ALSO SENSOP = 'C'
+                PERFORM REGLE3
+
+                WHEN TYPCNT = 1 ALSO WS-TYPCLI = 'E' ALSO SENSOP = 'D'
+                PERFORM REGLE4
+
+                WHEN TYPCNT = 1 ALSO WS-TYPCLI = 'E' ALSO SENSOP = 'C'
+                PERFORM REGLE5
+
+             END-EVALUATE
+           PERFORM FIN.
+
+      ******************************************************************
+      *                                                                *
+      *  ETIQUETTE DEBUT :  OUVERTURE FICHIER KSDS (NOM : BACCNTK)     *
+      *                     LECTURE DU KSDS                            *
+      *                     IMPORTATION DONNEES                        *
+      *                          L.130  NUMCLI = NUMERO DE CLIENT      *
+      *                          L.138  TYPCNT = TYPE DE CONTRAT       *
+      *                          L.144  TYPCLI = TYPE DE CLIENT        *
+      *                          L.149  SENSOP = SENS DE L'OPERATION   *
+      *                                                                *
+      ******************************************************************
+
+       DEBUT.
+      * OUVERTURE KSDS
+           OPEN I-O BACCNTK
+           IF FS-BACCNTK NOT = ZEROES
+      *       SET KO TO TRUE
+              DISPLAY 'PROBLEME - OUVERTURE DE BACCNTK'
+              DISPLAY 'FS-BACCNTK = ' FS-BACCNTK
+           END-IF
+
+      * NUMERO DE CLIENT (CLE SECONDAIRE)
+           MOVE ZNUMCLI TO CNTK-NUMCLI
+           DISPLAY 'NUMERO CLIENT ICI :'
+           DISPLAY CNTK-NUMCLI
+
+      * LECTURE KSDS
+           START BACCNTK KEY >= CNTK-NUMCLI
+           PERFORM LECTURE
+
+      * TYPE DE CONTRAT
+           MOVE CNTK-TYPCNT TO TYPCNT
+           DISPLAY 'TYPE DE CONTRAT :'
+           DISPLAY TYPCNT
+
+      * TYPE DE CLIENT
+           MOVE ZTYPCLI TO WS-TYPCLI
+           DISPLAY 'TYPE DE CLIENT :'
+           DISPLAY WS-TYPCLI
+
+      * SI MONTANT TRANSACTION SUPERIEUR à 0, SENSOP = CREDIT
+           DISPLAY ZMTTRANS
+           MOVE ZMTTRANS TO WS-MTTRANS
+           IF WS-MTTRANS > ZEROES
+              MOVE 'C' TO SENSOP
+           END-IF
+           IF WS-MTTRANS < ZEROES
+              MOVE 'D' TO SENSOP
+           END-IF
+           IF WS-MTTRANS = ZEROES
+              DISPLAY 'MONTANT DE TRANSACTION NUL'
+           END-IF
+           DISPLAY 'SENSOP : ' SENSOP
+           DISPLAY 'MONTANT TRANSACTION : ' WS-MTTRANS
+           .
+
+       LECTURE.
+           READ BACCNTK NEXT
+              IF FS-BACCNTK = '23'
+                 PERFORM REGLE1
+              ELSE IF FS-BACCNTK NOT = ZEROES
+                 DISPLAY 'PROBLEME - LECTURE DE BACCNTK'
+                 DISPLAY 'FS-BACCNTK = ' FS-BACCNTK
+              END-IF
+      *          AT END
+      *             SET KO TO TRUE
+      *             DISPLAY 'FIN DE FICHIER'
+      *          NOT AT END
+      *             SET OK TO TRUE
+      *    END-READ
+           .
+
+      *************************************************************
+      *                                                           *
+      *      CALCUL DES COMMISSIONS EN FONCTION DE 5 REGLES       *
+      *                                                           *
+      *************************************************************
+
+      *************************************************************
+      *      REGLE N°1 : MONTANT FORFAITAIRE DE 5 EUROS           *
+      *************************************************************
+       REGLE1.
+           ADD 5 TO WS-MTTCOM
+           DISPLAY 'APPLICATION REGLE N°1'
+           MOVE WS-MTTCOM TO ZMTTCOM
+           DISPLAY WS-MTTCOM
+           DISPLAY ZMTTCOM
+           MOVE WS-MTTRANS TO ZMTTRANS
+           DISPLAY WS-MTTRANS
+           DISPLAY ZMTTRANS
+           .
+
+      *************************************************************
+      *      REGLE N°2 : MONTANT FORFAITAIRE DE 3 EUROS           *
+      *************************************************************
+       REGLE2.
+           ADD 3 TO WS-MTTCOM
+           DISPLAY 'APPLICATION REGLE N°2'
+           MOVE WS-MTTCOM TO ZMTTCOM
+           DISPLAY WS-MTTCOM
+           DISPLAY ZMTTCOM
+           MOVE WS-MTTRANS TO ZMTTRANS
+           DISPLAY WS-MTTRANS
+           DISPLAY ZMTTRANS
+           .
+
+      *************************************************************
+      *    REGLE N°3 : MONTANT EN % DU MONTANT DE L'OPERATION     *
+      *                                                           *
+      *    WS-MTTRANS : < à 5 000          : 2%                   *
+      *                DE 5 000  à 10 000  : 1,5%                 *
+      *                DE 10 000 à 15 000  : 1%                   *
+      *                > à 15 000          : 0,5%                 *
+      *************************************************************
+       REGLE3.
+           EVALUATE TRUE
+             WHEN WS-MTTRANS < 5000
+                  COMPUTE WS-MTTCOM = WS-MTTRANS * 0,02
+             WHEN WS-MTTRANS >= 5000 AND WS-MTTRANS < 10000
+                  COMPUTE WS-MTTCOM = WS-MTTRANS * 0,015
+             WHEN WS-MTTRANS >= 10000 AND WS-MTTRANS < 15000
+                  COMPUTE WS-MTTCOM = WS-MTTRANS * 0,01
+             WHEN WS-MTTRANS >= 15000
+                  COMPUTE WS-MTTCOM = WS-MTTRANS * 0,005
+           END-EVALUATE
+           DISPLAY 'APPLICATION REGLE N°3'
+           MOVE WS-MTTCOM TO ZMTTCOM
+           DISPLAY WS-MTTCOM
+           DISPLAY ZMTTCOM
+           MOVE WS-MTTRANS TO ZMTTRANS
+           DISPLAY WS-MTTRANS
+           DISPLAY ZMTTRANS
+           .
+
+      *************************************************************
+      *    REGLE N°4 : MONTANT EN % DU MONTANT DE L'OPERATION     *
+      *                                                           *
+      *    WS-MTTRANS : < à 5 000          : 30 EUROS             *
+      *                DE 5 000  à 10 000  : 20 EUROS             *
+      *                DE 10 000 à 15 000  : 10 EUROS             *
+      *                > à 15 000          : PAS DE FRAIS         *
+      *************************************************************
+       REGLE4.
+           EVALUATE TRUE
+             WHEN WS-MTTRANS < 5000
+                  ADD 30 TO WS-MTTCOM
+             WHEN WS-MTTRANS >= 5000 AND < 10000
+                  ADD 20 TO WS-MTTCOM
+             WHEN WS-MTTRANS >= 10000 AND < 15000
+                  ADD 10 TO WS-MTTCOM
+             WHEN WS-MTTRANS >= 15000
+                  ADD 00 TO WS-MTTCOM
+           END-EVALUATE
+           DISPLAY 'APPLICATION REGLE N°4'
+           MOVE WS-MTTCOM TO ZMTTCOM
+           DISPLAY WS-MTTCOM
+           DISPLAY ZMTTCOM
+           MOVE WS-MTTRANS TO ZMTTRANS
+           DISPLAY WS-MTTRANS
+           DISPLAY ZMTTRANS
+           .
+
+      *************************************************************
+      *      REGLE N°5 : FRAIS DE 5 %                             *
+      *************************************************************
+       REGLE5.
+           COMPUTE WS-MTTCOM = WS-MTTRANS * 0,05
+           DISPLAY 'APPLICATION REGLE N°5'
+           MOVE WS-MTTCOM TO ZMTTCOM
+           MOVE WS-MTTRANS TO ZMTTRANS
+           .
+
+
+      ******************************************************************
+      *                     ETIQUETTES DE FIN                          *
+      ******************************************************************
+
+       FIN.
+           CLOSE BACCNTK
+           GOBACK.
+
+      *                                                 ////
+      *                                                (OO)
+      *                                          -OOO--(__)--OOO-

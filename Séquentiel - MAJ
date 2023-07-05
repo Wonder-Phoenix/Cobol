@@ -1,0 +1,424 @@
+#********************************************************************************************************************#
+#  ÉNONCÉ : Le fichier STOCK (trié par ordre croissant sur le numéro de produit) doit servir à alimenter un fichier  #
+#           comptable COMPTA, un fichier de dépassement DEPAS et à transmettre des messages d'alerte.                #
+#                                                                                                                    #
+#           Pour chaque enregistrement du fichier Stock : Création d'un enregistrement dans le fichier COMPTA        #
+#           comptabilisant chaque article                                                                            #
+#              - Si le nombre de produit est < au nombre minimun                                                     #
+#                    ▶︎ Afficher une ligne d'alerte ("Réapprovisionnement du produit N° xxxxx")                       #
+#              - Si le nombre de produit est > ou = au nombre minimun et que le pric du produit est > ou = à 5€      #
+#                    ▶︎ Création d'un enregistrement dans le fichier DEPAS avec le numéro de produit et le prix total #
+#********************************************************************************************************************#
+
+#*******************************************************************#
+#                    CONTENU DU FICHIER STOCK                       #
+#*******************************************************************#
+NUMPRD ; NBPRD ; PRIX ; NBMIN
+001001    010   005500   004
+001002    008   010000   010
+001003    003   002500   003
+
+
+#*******************************************************************#
+#                            PSEUDO-CODE                            #
+#*******************************************************************#
+* FICHIERS EN ENTRÉE ET EN SORTIE
+      Structure ENR-STOCK
+            NUMPRD      numérique(6)
+            NBPRD       numérique(3)
+            PRIX        numérique(4,2)
+            NBMIN       numérique(3)
+      fin structure
+      
+      Structure ENR-COMPTA
+            NUMPRDC     numérique(6)
+            PRIX-TOTAL  numérique(5,2)
+      fin structure
+      
+      Structure ENR-DEPAS
+            NUMPRDD     numérique(6)
+            PRIX-TOTALD numérique(5,2)
+      fin structure
+
+* COMPTEURS (fichier COMPTA, DEPAS, STOCK)
+      CPTC              entier
+      CPTD              entier
+      CPTS              entier
+
+* TRAITEMENT
+Début
+* Initialisation des compteurs
+      CPTC ← 0
+      CPTD ← 0
+      CPTS ← 0
+* Ouverture des fichiers selon l'action désirée pour chacun
+      Ouvrir STOCK en lecture
+      Ouvrir COMPTA en écriture
+      Ouvrir DEPAS en écriture
+* Lecture du 1er enregistrement STOCK
+      Lire STOCK, ENR-STOCK
+* Boucle de traitement de chaque enregistrement se terminant par la lecture de l'enregistrement suivant avec appel à des paragraphes
+      tant que non EOF STOCK
+          CPTS ← CPTS + 1
+          faire TRT-COMPTA
+          faire TRT-ALERTE
+          faire TRT-DEPAS
+* Lecture de l'enregistrement STOCK suivant
+          lire STOCK, ENR-STOCK
+      fin tant que
+* Fermeture des fichiers
+      Fermer STOCK, COMPTA, DEPAS
+* Affichage des compteurs
+      Afficher « CPTS : » CPTS
+      Afficher « CPTC : » CPTC
+      Afficher « CPTD : » CPTD
+* Fin du programme
+      fin
+
+* Paragraphes appelés dans le programme et codés après la fin
+* 1) alimentation et écriture d'un enregistrement COMPTA
+      TRT-COMPTA
+          NUMPRDC ← NUMPRD
+          PRIX-TOTAL ← PRIX * NBPRD
+          écrire ENR-COMPTA, COMPTA
+          CPTC ← CPTC + 1
+
+* 2) alimentation et écriture d'un enregistrement DEPAS
+      TRT-DEPAS
+      Si NBPRD >= NBMIN et PRIX >= 5
+          NUMPRDD ← NUMPRD
+          PRIX-TOTALD ← PRIX * NBPRD
+          écrire ENR-DEPAS, DEPAS
+          CPTD ← CPTD + 1
+      finsi
+
+* 3) demande de réapprovisionnement si quantité en stock < quantité minimum si NBPRD < NBMIN
+afficher « Réapprovisionnement du produit numéro » NUMPRD finsi
+
+      TRT-ALERTE
+      si NBPRD < NBMIN
+          afficher « Réapprovisionnement du produit numéro » NUMPRD
+      finsi
+
+
+
+#*******************************************************************#
+#                            PROGRAMME                              #
+#*******************************************************************#
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. ALGO1.
+       AUTHOR. OTEUR.
+       DATE-WRITTEN. 05/04/2023.
+      ******************************************************************
+      *  FONCTION DU PROGRAMME : ALGO 1 DU TP COBOL                    *
+      *  230405 : CREATION DU PROGRAMME                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+      * LE CARACTERE POUR LA PONCTUATION DECIMALE EST LA VIRGULE
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+      * DECLARATION DES FICHIERS
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT FSTOCK ASSIGN FSTOCK
+                  ORGANIZATION IS SEQUENTIAL
+                  ACCESS MODE  IS SEQUENTIAL
+                  FILE STATUS  IS FS-STOCK.
+           SELECT FCOMPTA ASSIGN FCOMPTA
+                  ORGANIZATION IS SEQUENTIAL
+                  ACCESS MODE  IS SEQUENTIAL
+                  FILE STATUS  IS FS-COMPTA.
+           SELECT FDEPAS ASSIGN FDEPAS
+                  ORGANIZATION IS SEQUENTIAL
+                  ACCESS MODE  IS SEQUENTIAL
+                  FILE STATUS  IS FS-DEPAS.
+       DATA DIVISION.
+      * DESCRIPTION DES ENREGISTREMENTS DANS LE BUFFER
+       FILE SECTION.
+      * FICHIER STOCK (80 caractères)
+       FD  FSTOCK
+           RECORDING MODE IS F.
+
+       01  ENR1-STOCK.
+           05 ENR1-NUMPRD     PIC 9(6).
+           05 ENR1-NBPRD      PIC 9(3).
+           05 ENR1-PRIX       PIC 9(4)V99.
+           05 ENR1-NBMIN      PIC 9(3).
+           05                 PIC X(62).
+
+      * FICHIER COMPTA (20 caractères)
+       FD  FCOMPTA
+           RECORDING MODE IS F.
+
+       01  ENR2-COMPTA.
+           05 ENR2-NUMPRD     PIC 9(6).
+           05 ENR2-PRIX-TOTAL PIC 9(5)V99.
+           05                 PIC X(7). 
+
+      * FICHIER DEPASSEMENT (20 caractères)
+       FD  FDEPAS
+           RECORDING MODE IS F.
+
+       01  ENR3-DEPAS.
+           05 ENR3-NUMPRD     PIC 9(6).
+           05 ENR3-PRIX-TOTAL PIC 9(5)V99.
+           05                 PIC X(7).
+
+       WORKING-STORAGE SECTION.
+      * DECLARATION DES FILE STATUS
+       01  FS-STOCK           PIC 99    VALUE ZEROES.
+       01  FS-COMPTA          PIC 99    VALUE ZEROES.
+       01  FS-DEPAS           PIC 99    VALUE ZEROES.
+
+      * DECLARATION DES COMPTEURS
+       01  CPTC               PIC 99    VALUE ZEROES.
+       01  CPTD               PIC 99    VALUE ZEROES.
+       01  CPTS               PIC 99    VALUE ZEROES.
+
+      * DECLARATION DE L'INDICATEUR DE FIN DE FICHIER
+       01                     PIC 9     VALUE ZEROES.
+          88 FIN-FICHIER                VALUE 1.
+
+       PROCEDURE DIVISION.
+           PERFORM DEBUT
+       PERFORM UNTIL FIN-FICHIER
+           PERFORM TRAITEMENT
+           PERFORM READ-FSTOCK
+       END-PERFORM
+       PERFORM FIN
+       .
+
+       DEBUT.
+      * OUVERTURE FICHIER STOCK EN LECTURE
+             OPEN INPUT FSTOCK
+             IF FS-STOCK NOT = ZEROES
+                DISPLAY 'ERREUR OPEN FSTOCK, FS : ' FS-STOCK
+                PERFORM FIN
+             END-IF
+
+      * OUVERTURE FICHIER COMPTA EN ECRITURE
+             OPEN OUTPUT FCOMPTA
+             IF FS-COMPTA NOT = ZEROES
+                DISPLAY 'ERREUR OPEN FCOMPTA, FS : ' FS-COMPTA
+                PERFORM FIN
+             END-IF
+
+      * OUVERTURE FICHIER DEPAS EN ECRITURE
+             OPEN OUTPUT FDEPAS
+             IF FS-DEPAS  NOT = ZEROES
+                DISPLAY 'ERREUR OPEN FDEPAS , FS : ' FS-DEPAS
+                PERFORM FIN
+             END-IF
+
+      * 1ERE LECTURE DU STOCK
+             PERFORM READ-FSTOCK
+             IF FIN-FICHIER
+                DISPLAY 'FICHIER FSTOCK VIDE'
+                PERFORM FIN
+             END-IF
+             .
+
+       TRAITEMENT.
+             PERFORM TRT-COMPTA
+             PERFORM TRT-DEPAS
+             PERFORM TRT-ALERTE
+             .
+
+       TRT-COMPTA.
+             MOVE SPACES        TO ENR2-COMPTA
+             MOVE ENR1-NUMPRD   TO ENR2-NUMPRD
+
+             COMPUTE ENR2-PRIX-TOTAL =
+                     ENR1-PRIX * ENR1-NBPRD
+             WRITE ENR2-COMPTA
+
+             IF FS-COMPTA = ZEROES
+                ADD 1 TO CPTC
+             ELSE
+                DISPLAY 'ERREUR WRITE COMPTA, FS : ' FS-COMPTA
+                PERFORM FIN
+             END-IF
+             .
+
+
+       TRT-DEPAS.
+             IF ENR1-NBPRD NOT < ENR1-NBMIN
+             AND ENR1-PRIX  NOT < 5
+                DISPLAY 'NUMPRD: ' ENR1-NUMPRD
+                DISPLAY 'NBPRD : ' ENR1-NBPRD
+                DISPLAY 'NBMIN : ' ENR1-NBMIN
+                DISPLAY 'PRIX  : ' ENR1-PRIX
+
+                MOVE SPACES          TO ENR3-DEPAS
+                MOVE ENR1-NUMPRD     TO ENR3-NUMPRD
+
+                COMPUTE ENR3-PRIX-TOTAL =
+                        ENR1-PRIX * ENR1-NBPRD
+                WRITE ENR3-DEPAS
+
+                IF FS-DEPAS = ZEROES
+                   ADD 1 TO CPTD
+                ELSE
+                   DISPLAY 'ERREUR WRITE DEPAS, FS : ' FS-DEPAS
+                   PERFORM FIN
+                END-IF
+             END-IF
+             .
+
+       TRT-ALERTE.
+             IF  ENR1-NBPRD < ENR1-NBMIN
+                DISPLAY 'REAPPROVISIONNEMENT DU PRODUIT '  ENR1-NUMPRD
+             END-IF
+             .
+      
+      * LECTURE DU FICHIER STOCK
+       READ-FSTOCK.
+             READ FSTOCK
+                AT END     SET FIN-FICHIER TO TRUE
+                NOT AT END ADD 1 TO CPTS
+             END-READ
+             IF FS-STOCK NOT = ZEROES AND 10
+                DISPLAY 'ERREUR READ FSTOCK, FS : ' FS-STOCK
+                PERFORM FIN
+             END-IF
+             .
+
+      * FIN
+       FIN.
+
+      * AFFICHAGE DES COMPTEURS
+             DISPLAY 'NB ENR STOCK  LUS : ' CPTS
+             DISPLAY 'NB ENR COMPTA ECR : ' CPTC
+             DISPLAY 'NB ENR DEPAS  ECR : ' CPTD
+
+      * FERMETURE DU FICHCIERV;GH,FRJT
+           CLOSE FSTOCK FCOMPTA FDEPAS
+
+           STOP RUN
+           .
+
+
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API8FAL1 JOB 'SDJ FORMATION',MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,
+//   NOTIFY=&SYSUID,COND=(4,LT),TIME=(,3),RESTART=*
+//*
+//* BIBLIOTHEQUE DES LOAD MODULES
+//JOBLIB   DD DSN=API8.COBOL.LOAD,DISP=SHR
+//         DD DSN=CEE.SCEERUN,DISP=SHR
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API8.SOURCE.COBOL(ALGO1)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//             DD   DISP=SHR,DSN=API8.SOURCE.COPY
+//LKED.SYSLMOD DD   DSN=API8.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME ALGO1(R)
+//*
+//* SUPPRESSION DES FICHIERS COMPTA ET DEPAS
+//STEP1        EXEC PGM=IDCAMS
+//SYSPRINT     DD   SYSOUT=*
+//SYSIN        DD   *
+ DELETE API8.COB.FCOMPTA
+ DELETE API8.COB.FDEPAS
+ SET MAXCC = 0
+//*
+//* EXECUTION DU PROGRAMME
+//STEP2        EXEC PGM=ALGO1
+//SYSOUT       DD SYSOUT=*
+//FSTOCK       DD   DSN=API8.COB.FSTOCK,DISP=SHR
+//FCOMPTA      DD   DSN=API8.COB.FCOMPTA,DISP=(,CATLG,DELETE),
+//             DCB=(LRECL=20,RECFM=FB,DSORG=PS),SPACE=(TRK,(1))
+//FDEPAS       DD   DSN=API8.COB.FDEPAS,DISP=(,CATLG,DELETE),
+//             DCB=(LRECL=20,RECFM=FB,DSORG=PS),SPACE=(TRK,(1))
+//
+
+
+#*******************************************************************#
+#                 SYSOUT / COMPTE-RENDU D'EXECUTION                 #
+#*******************************************************************#
+
+REAPPROVISIONNEMENT DU PRODUIT 000002
+NUMPRD: 000003
+NBPRD : 220
+NBMIN : 200
+PRIX  : 000500
+REAPPROVISIONNEMENT DU PRODUIT 000004
+REAPPROVISIONNEMENT DU PRODUIT 000005
+REAPPROVISIONNEMENT DU PRODUIT 000006
+REAPPROVISIONNEMENT DU PRODUIT 000007
+REAPPROVISIONNEMENT DU PRODUIT 000008
+REAPPROVISIONNEMENT DU PRODUIT 000009
+REAPPROVISIONNEMENT DU PRODUIT 000010
+REAPPROVISIONNEMENT DU PRODUIT 000011
+REAPPROVISIONNEMENT DU PRODUIT 000012
+REAPPROVISIONNEMENT DU PRODUIT 000013
+REAPPROVISIONNEMENT DU PRODUIT 000014
+REAPPROVISIONNEMENT DU PRODUIT 000015
+REAPPROVISIONNEMENT DU PRODUIT 000016
+REAPPROVISIONNEMENT DU PRODUIT 000017
+REAPPROVISIONNEMENT DU PRODUIT 000018
+NB ENR STOCK  LUS : 18
+NB ENR COMPTA ECR : 18
+NB ENR DEPAS  ECR : 01
+
+#*******************************************************************#
+#                          FICHIER STOCK                            #
+#*******************************************************************#
+********************************* Top of Data ***
+000001200000200200
+000002150001200200
+000003220000500200
+000004080001400200
+000005070001300200
+000006050000800200
+000007100002000200
+000008100001800300
+000009100002200250
+000010100001700400
+000011100002100350
+000012100002400200
+000013010000200050
+000014020000400070
+000015012001200200
+000016025000800120
+000017010000700210
+000018017000600130
+******************************** Bottom of Data *
+
+#*******************************************************************#
+#                          FICHIER COMPTA                           #
+#*******************************************************************#
+********************************* Top of Data ***
+0000010040000
+0000020180000
+0000030110000
+0000040112000
+0000050091000
+0000060040000
+0000070200000
+0000080180000
+0000090220000
+0000100170000
+0000110210000
+0000120240000
+0000130002000
+0000140008000
+0000150014400
+0000160020000
+0000170007000
+0000180010200
+******************************** Bottom of Data *
+
+
+#*******************************************************************#
+#                          FICHIER DEPAS                            #
+#*******************************************************************#
+********************************* Top of Data ***
+0000030110000
+******************************** Bottom of Data *
+

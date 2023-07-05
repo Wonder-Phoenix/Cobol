@@ -1,0 +1,634 @@
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. DB2RMZ.
+       AUTHOR. HERVE.
+       DATE-WRITTEN. 01/06/2023.
+      ******************************************************************
+      *  FONCTION DU PROGRAMME: EXEMPLES D'UTILISATION DE QUELQUES     *
+      *                         FONCTIONS
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      * DECLARATION DU FICHIER
+       DATA DIVISION.
+       FILE SECTION.
+       WORKING-STORAGE SECTION.
+      * COPY DES DECLARATIONS DE LA TABLE DEPARTEMENT
+           EXEC SQL INCLUDE BCLIENT END-EXEC.
+           EXEC SQL INCLUDE BSTATUT END-EXEC.
+           EXEC SQL INCLUDE BCOMPTE END-EXEC.
+           EXEC SQL INCLUDE BCPTCLI END-EXEC.
+           EXEC SQL INCLUDE BOPER END-EXEC.
+
+      * COPY DES DECLARATIONS DES TABLES VIR
+           EXEC SQL INCLUDE VIRBIC END-EXEC.
+           EXEC SQL INCLUDE VIRDEV END-EXEC.
+           EXEC SQL INCLUDE VIRCHA END-EXEC.
+           EXEC SQL INCLUDE MSWI   END-EXEC.
+
+      * COPY DES ZONES UTILES A DB2
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+
+       PROCEDURE DIVISION.
+
+      *   -- SUPPRESSION DE LA TABLE BAC_STATUT
+            EXEC SQL
+            DROP TABLE API0.BAC_STATUT
+            END-EXEC
+            DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+            DISPLAY SQLCODE
+
+      *   -- CREATION DE LA TABLE BAC_STATUT
+            EXEC SQL
+            CREATE TABLE API0.BAC_STATUT
+            (STATUT   CHAR(1)      NOT NULL,
+             LIBSTA   CHAR(15)     NOT NULL,
+             PRIMARY KEY(STATUT))
+             END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            CREATE UNIQUE INDEX API0.IXSTATUT                           );
+            ON API0.BAC_STATUT(STATUT)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+      *   -- ALIMENTATION DE LA TABLE BAC_STATUT
+            EXEC SQL
+            INSERT INTO API0.BAC_STATUT VALUES
+            ('C','CLIENT EN COURS')
+            END-EXEC
+              DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_STATUT VALUES
+            ('P','PROSPECT')
+            END-EXEC
+              DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_STATUT VALUES
+            ('O','OUVERT')
+            END-EXEC
+              DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_STATUT VALUES
+            ('B','BLOQUE')
+            END-EXEC
+              DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_STATUT VALUES
+            ('F','FERME')
+            END-EXEC
+              DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- SUPPRESSION DE LA TABLE BAC_CLIENT
+            EXEC SQL
+            DROP TABLE API0.BAC_CLIENT
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- CREATION DE LA TABLE BAC_CLIENT
+            EXEC SQL
+            CREATE TABLE API0.BAC_CLIENT
+            (NUMCLI   SMALLINT    NOT NULL,
+             STATUT   CHAR(1)      NOT NULL,
+             TYPCLI   CHAR(1)      NOT NULL,
+             NOM000   CHAR(15)     NOT NULL,
+             PRENOM   CHAR(15),
+             VILLE0   CHAR(15),
+             CDPOST   DECIMAL(5,0),
+             DATENT   DATE         NOT NULL WITH DEFAULT,
+             DATMAJ   DATE         NOT NULL WITH DEFAULT,
+             PRIMARY KEY(NUMCLI),
+             FOREIGN KEY(STATUT) REFERENCES API0.BAC_STATUT             STRICT);
+             ON DELETE RESTRICT)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            CREATE UNIQUE INDEX API0.IXCLIENT                           );
+            ON API0.BAC_CLIENT(NUMCLI)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- ALIMENTATION DE LA TABLE BAC_CLIENT
+            EXEC SQL
+            INSERT INTO API0.BAC_CLIENT VALUES
+            (1,'C','E','COBOL SA',NULL,'PARIS',75001,'1999-01-15',      01-15');
+            '2023-01-15')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_CLIENT VALUES
+            (2,'C','P','BRASSENS','GEORGES','SETE',33000,               FAULT);
+            '2021-10-24','2021-10-24')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_CLIENT VALUES
+            (3,'P','P','PAGNY','FLORENT','HUIT',08001,'1984-09-07',     -06-30')
+            '2010-06-30')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_CLIENT VALUES
+            (4,'C','E','JAVA',NULL,'LILLE',59001,'2020-02-18',          4');
+            '2023-01-14')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- SUPPRESSION DE LA TABLE BAC_COMPTE
+            EXEC SQL
+            DROP TABLE API0.BAC_COMPTE
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- CREATION DE LA TABLE BAC_COMPTE
+            EXEC SQL
+            CREATE TABLE API0.BAC_COMPTE
+            (NUMCPT   SMALLINT      NOT NULL,
+             STATUT   CHAR(1)       NOT NULL,
+             SOLDE0   DECIMAL(11,2) NOT NULL,
+             DATOUV   DATE         NOT NULL WITH DEFAULT,
+             DATMAJ   DATE         NOT NULL WITH DEFAULT,
+             PRIMARY KEY(NUMCPT),
+             FOREIGN KEY(STATUT) REFERENCES API0.BAC_STATUT             STRICT);
+             ON DELETE RESTRICT)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            CREATE UNIQUE INDEX API0.IXCOMPTE                           );
+            ON API0.BAC_COMPTE(NUMCPT)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+            DISPLAY SQLCODE
+
+
+      *   -- ALIMENTATION DE LA TABLE BAC_COMPTE
+            EXEC SQL
+            INSERT INTO API0.BAC_COMPTE VALUES
+            (1,'O',3240.53,'1999-01-15','2023-01-15')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_COMPTE VALUES
+            (2,'B',8340,'2021-10-24','2022-04-25')
+            END-EXEC
+             DISPLAY SQLCODE
+            EXEC SQL
+            INSERT INTO API0.BAC_COMPTE VALUES
+            (3,'F',0,'1984-09-07','2010-06-30')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_COMPTE VALUES
+            (4,'O',-536,'2020-02-18','2023-01-14')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- SUPPRESSION DE LA TABLE BAC_CPTCLI
+            EXEC SQL
+            DROP TABLE API0.BAC_CPTCLI
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- CREATION DE LA TABLE BAC_CPTCLI
+            EXEC SQL
+            CREATE TABLE API0.BAC_CPTCLI
+            (NUMCLI   SMALLINT      NOT NULL,
+             NUMCPT   SMALLINT      NOT NULL,
+             PRIMARY KEY(NUMCLI,NUMCPT),
+             FOREIGN KEY(NUMCLI) REFERENCES API0.BAC_CLIENT             STRICT,
+             ON DELETE RESTRICT,
+             FOREIGN KEY(NUMCPT) REFERENCES API0.BAC_COMPTE             STRICT);
+             ON DELETE RESTRICT)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            CREATE UNIQUE INDEX API0.IXCPTCLI                           ,NUMCPT)
+            ON API0.BAC_CPTCLI(NUMCLI,NUMCPT)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- ALIMENTATION DE LA TABLE BAC_CPTCLI
+            EXEC SQL
+            INSERT INTO API0.BAC_CPTCLI VALUES
+            (1,1)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_CPTCLI VALUES
+            (2,2)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_CPTCLI VALUES
+            (3,3)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_CPTCLI VALUES
+            (4,4)
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- SUPPRESSION DE LA TABLE BAC_OPER
+            EXEC SQL
+            DROP TABLE API0.BAC_OPER
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- CREATION DE LA TABLE BAC_OPER
+            EXEC SQL
+            CREATE TABLE API0.BAC_OPER
+            (NUMOPE   SMALLINT      NOT NULL,
+      *   --GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),
+             NUMCPT   SMALLINT      NOT NULL,
+             APPEME   CHAR(3),
+             TEXTE0   CHAR(80)      NOT NULL,
+             MTTOPE   DECIMAL(11,2),
+             MTTCOM   DECIMAL(11,2),
+             DATOPE   DATE         NOT NULL WITH DEFAULT,
+             PRIMARY KEY(NUMOPE),
+             FOREIGN KEY(NUMCPT) REFERENCES API0.BAC_COMPTE             SCADE);
+             ON DELETE CASCADE)
+            END-EXEC
+            DISPLAY SQLCODE
+
+            EXEC SQL
+            CREATE UNIQUE INDEX API0.IXOPER
+            ON API0.BAC_OPER(NUMOPE)
+            END-EXEC
+            DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+
+      *   -- ALIMENTATION DE LA TABLE BAC_OPER
+            EXEC SQL
+            INSERT INTO API0.BAC_OPER VALUES
+            (1,1,'RET','RETRAIT',-50,NULL,'2023-01-15')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_OPER VALUES
+            (2,1,'SAL','VIREMENT SALAIRE',3000,NULL,'2022-12-29')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_OPER VALUES
+            (3,1,'VIR','VIREMENT INTERNATIONAL',-5000,5,'2022-12-30')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_OPER VALUES
+            (4,4,'CRD','CREDIT CONSO',-450,10,'2022-12-30')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            INSERT INTO API0.BAC_OPER VALUES
+            (5,4,'DIV','DIVERS',10000,NULL,'2022-12-30')
+            END-EXEC
+             DISPLAY SQLCODE
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+             DISPLAY SQLCODE
+
+      *********************************************************
+      *********************************************************
+      *********************************************************
+      *********************************************************
+
+      *   SUPPRESSION DE LA TABLE VIR_BIC
+             EXEC SQL
+             DROP TABLE API0.VIR_BIC
+             END-EXEC
+
+
+             EXEC SQL
+             COMMIT
+             END-EXEC
+
+      *   CREATION DE LA TABLE VIR_BIC
+            EXEC SQL
+            CREATE TABLE API0.VIR_BIC
+            (BIC000   CHAR(11)     NOT NULL,
+             CODDEV   CHAR(03)     NOT NULL,
+             PRIMARY KEY(BIC000))
+            END-EXEC
+
+            EXEC SQL
+            CREATE UNIQUE INDEX API0.IXBIC  ON API0.VIR_BIC(BIC000)
+            END-EXEC
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+
+      *   ALIMENTATION DE LA TABLE VIR_BIC
+            EXEC SQL
+            INSERT INTO API0.VIR_BIC VALUES
+            ('BANFFRPPXXX','EUR')
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_BIC VALUES
+            ('BOFAUS3NXXX','USD')
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_BIC VALUES
+            ('PMFAUS66HKG','USD')
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_BIC VALUES
+            ('BRASBRRJXXX','BRL')
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_BIC VALUES
+            ('BBDEBRSPSP0','BRL')
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_BIC VALUES
+            ('BOFSGBS1ZF2','GBP')
+            END-EXEC
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+
+      *   SUPPRESSION DE LA TABLE VIR_DEVISE
+            EXEC SQL
+            DROP TABLE API0.VIR_DEVISE
+            END-EXEC
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+
+
+      *    CREATION DE LA TABLE VIR_DEVISE
+            EXEC SQL
+             CREATE TABLE API0.VIR_DEVISE
+             (CODDEV   CHAR(3)      NOT NULL,
+              LIBDEV   CHAR(20)     NOT NULL,
+              BICCOR   CHAR(11),
+              PRIMARY KEY(CODDEV),
+              FOREIGN KEY(BICCOR) REFERENCES API0.VIR_BIC
+              ON DELETE RESTRICT)
+            END-EXEC
+
+            EXEC SQL
+             CREATE UNIQUE INDEX API0.IXDEVISE
+             ON API0.VIR_DEVISE(CODDEV)
+            END-EXEC
+
+            EXEC SQL
+             COMMIT
+            END-EXEC
+
+      *    ALIMENTATION DE LA TABLE VIR_DEVISE
+            EXEC SQL
+             INSERT INTO API0.VIR_DEVISE VALUES
+             ('EUR','EURO',NULL)
+            END-EXEC
+
+            EXEC SQL
+             INSERT INTO API0.VIR_DEVISE VALUES
+             ('USD','DOLLAR US','BOFAUS3NXXX')
+            END-EXEC
+
+            EXEC SQL
+             INSERT INTO API0.VIR_DEVISE VALUES
+             ('GBP','LIVRE BRITANIQUE','BOFSGBS1ZF2')
+            END-EXEC
+
+            EXEC SQL
+             INSERT INTO API0.VIR_DEVISE VALUES
+             ('BRL','REAL BRESILIEN','BRASBRRJXXX')
+            END-EXEC
+
+            EXEC SQL
+             COMMIT
+            END-EXEC
+
+      *    SUPPRESSION DE LA TABLE VIR_CHANGE
+            EXEC SQL
+             DROP TABLE API0.VIR_CHANGE
+            END-EXEC
+
+            EXEC SQL
+             COMMIT
+            END-EXEC
+
+      *   CREATION DE LA TABLE VIR_CHANGE
+            EXEC SQL
+            CREATE TABLE API0.VIR_CHANGE
+            (CODDEV1  CHAR(3)       NOT NULL,
+             CODDEV2  CHAR(3)       NOT NULL,
+             CHANGE   DECIMAL(18,9) NOT NULL,
+             PRIMARY KEY(CODDEV1,CODDEV2),
+             FOREIGN KEY(CODDEV1) REFERENCES API0.VIR_DEVISE
+             ON DELETE CASCADE,
+             FOREIGN KEY(CODDEV2) REFERENCES API0.VIR_DEVISE
+             ON DELETE CASCADE)
+            END-EXEC
+
+            EXEC SQL
+            CREATE UNIQUE INDEX API0.XCHANGE
+            ON API0.VIR_CHANGE(CODDEV1,CODDEV2)
+            END-EXEC
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+
+      *   ALIMENTATION DE LA TABLE VIR_CHANGE
+            EXEC SQL
+            INSERT INTO API0.VIR_CHANGE VALUES
+            ('EUR','USD',1.08)
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_CHANGE VALUES
+            ('USD','EUR',.92)
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_CHANGE VALUES
+            ('EUR','GBP',.89)
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_CHANGE VALUES
+            ('GBP','EUR',1.13)
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_CHANGE VALUES
+            ('EUR','BRL',5.52)
+            END-EXEC
+
+            EXEC SQL
+            INSERT INTO API0.VIR_CHANGE VALUES
+            ('BRL','EUR',.18)
+            END-EXEC
+
+            EXEC SQL
+            COMMIT
+            END-EXEC
+
+      *    SUPPRESSION DE LA TABLE VIR_SWIFT
+            EXEC SQL
+             DROP TABLE API0.VIR_MSWIFT
+            END-EXEC
+
+            EXEC SQL
+             COMMIT
+            END-EXEC
+
+      * -- CREATION DE LA TABLE VIR_SWIFT
+            EXEC SQL
+             CREATE TABLE API0.VIR_MSWIFT
+             (REFMSG   SMALLINT      NOT NULL,
+              TYPMSG   CHAR(3)       NOT NULL,
+              DATVAL   DATE          NOT NULL,
+              CODDEV   CHAR(3)       NOT NULL,
+              MTTRAN   DECIMAL(18,9) NOT NULL,
+              NUMCLID  SMALLINT,
+              NOMCLID  CHAR(20),
+              NUMCPTD  SMALLINT,
+              BICDEB   CHAR(11),
+              BICCOR   CHAR(11),
+              NUMCLIC  SMALLINT,
+              NOMCLIC  CHAR(20),
+              NUMCPTC  SMALLINT,
+              BICCRD   CHAR(11)      NOT NULL,
+              DATEMI   DATE          NOT NULL,
+              PRIMARY KEY(REFMSG))
+            END-EXEC
+
+            EXEC SQL
+             CREATE UNIQUE INDEX API0.IXMSWIFT
+             ON API0.VIR_MSWIFT(REFMSG)
+            END-EXEC
+
+            EXEC SQL
+             COMMIT
+            END-EXEC
+
+
+
+           PERFORM FIN.
+
+
+
+
+       FIN.
+           STOP RUN.
+
+      *                                                 ////
+      *                                                (OO)
+      *                                          -OOO--(__)--OOO-

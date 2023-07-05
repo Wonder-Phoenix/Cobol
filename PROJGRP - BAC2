@@ -1,0 +1,410 @@
+   CBL DYNAM
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. BAC2.
+       AUTHOR. SOPHIE.
+       DATE-WRITTEN. 05/06/23.
+      ******************************************************************
+      *                                                                *
+      *           EDITION : LISTE DES CLIENTS ET DES COMPTES           *
+      *                                                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+
+      * DECLARATION DU FICHIER D'IMPRESSION
+           SELECT BAC2ED ASSIGN BAC2ED
+              ORGANIZATION SEQUENTIAL
+              ACCESS MODE IS SEQUENTIAL
+              FILE STATUS IS FS-BAC2ED.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD BAC2ED RECORDING MODE IS F.
+       01 ENR-BAC2ED.
+           05 LIG-BAC2ED            PIC X(132).
+
+       WORKING-STORAGE SECTION.
+      * FILE STATUS
+       01 FS-BAC2ED                PIC 99     VALUE ZEROES.
+
+      * COPY DES DECLARATIONS DE LA TABLE BAC_CLIENT
+           EXEC SQL INCLUDE BCLIENT END-EXEC.
+
+      * COPY DES DECLARATIONS DE LA TABLE BAC_COMPTE
+           EXEC SQL INCLUDE BCOMPTE END-EXEC.
+
+      * COPY DES DECLARATIONS DE LA TABLE BAC_CPTCLI
+           EXEC SQL INCLUDE BCPTCLI END-EXEC.
+
+      * SQLCA
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+
+      * DECLARATION DES HOST-VARIABLES DE BAC_CLIENT
+       01 HVCLI-CLIENT.
+           05 HVCLI-NUMCLI          PIC S9(4) USAGE COMP.
+           05 HVCLI-STATUT          PIC X.
+           05 HVCLI-TYPCLI          PIC X.
+           05 HVCLI-NOM000          PIC X(15).
+           05 HVCLI-PRENOM          PIC X(15).
+           05 HVCLI-VILLE0          PIC X(15).
+           05 HVCLI-CDPOST          PIC S9(5)V USAGE COMP-3.
+           05 HVCLI-DATENT          PIC X(10).
+           05 HVCLI-DATMAJ          PIC X(10).
+
+      * DECLARATION DES HOST-VARIABLES DE BAC-COMPTE
+       01 HVCOM-COMPTE.
+           05 HVCOM-NUMCPT          PIC S9(4) USAGE COMP.
+           05 HVCOM-STATUT          PIC X.
+           05 HVCOM-SOLDE0          PIC S9(9)V99 USAGE COMP-3.
+
+      * DECLARATION DES HOST-VARIBALES DE BAC_CPTCLI
+       01 HVCC-CPTCLI.
+           05 HVCC-NUMCLI           PIC S9(4) USAGE COMP.
+           05 HVCC-NUMCPT           PIC S9(4) USAGE COMP.
+
+      * UTILISATION D'UN CURSEUR
+           EXEC SQL DECLARE LISTE CURSOR FOR
+             SELECT
+                      CLI.NUMCLI,
+                      CLI.STATUT,
+                      CLI.TYPCLI,
+                      CLI.NOM000,
+                VALUE(CLI.PRENOM, ' '),
+                VALUE(CLI.VILLE0, ' '),
+                VALUE(CLI.CDPOST, 0),
+                      CLI.DATENT,
+                      CLI.DATMAJ,
+                      COM.NUMCPT,
+                      COM.STATUT,
+                      COM.SOLDE0
+             FROM
+                BAC_CLIENT CLI JOIN BAC_CPTCLI CPTCLI
+                ON CLI.NUMCLI = CPTCLI.NUMCLI
+                JOIN BAC_COMPTE COM
+                ON CPTCLI.NUMCPT = COM.NUMCPT
+             ORDER BY CLI.NUMCLI
+           END-EXEC.
+
+      ******************************************************************
+      *                                                                *
+      *                L I G N E S   D ' E D I T I O N S               *
+      *                                                                *
+      ******************************************************************
+
+      * LIGNE 1 : TITRE ET DATE
+       01 L1.
+          05                       PIC X(19)  VALUE SPACES.
+          05                       PIC X(36)  VALUE 'EDITION DES CLIENTS
+      -      ' ET LEURS COMPTES'.
+          05                       PIC X(10)  VALUE SPACES.
+          05                       PIC X(05)  VALUE 'LE : '.
+          05 ED-DAT                PIC X(10)  VALUE SPACES.
+          05                       PIC X(52)  VALUE SPACES.
+
+      * LIGNE 2 : SEPARATION AVEC TIRETS
+       01 L2.
+          05                       PIC X(19)  VALUE SPACES.
+          05                       PIC X(36)  VALUE ALL '-'.
+          05                       PIC X(77)  VALUE SPACES.
+
+      * LIGNE 3 : SEPARATION AVEC ESPACES
+       01 L3.
+          05                       PIC X(132) VALUE SPACES.
+
+      * LIGNE 4 : INTITULES DE CHAQUE COLONNE
+      *           DONNEES DU CLIENT
+       01 L4.
+          05                       PIC X(06)  VALUE 'NUMCLI'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(06)  VALUE 'STATUT'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(03)  VALUE 'TYP'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(32)  VALUE 'NOM, PRENOM'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(15)  VALUE 'VILLE'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(06)  VALUE 'CDPOST'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(10)  VALUE 'D.ENTREE'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(10)  VALUE 'D.MAJ'.
+          05                       PIC X(23)  VALUE SPACES.
+
+      * LIGNE 5 : SEPARATION AVEC TIRETS
+       01 L5.
+          05                       PIC X(06)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(06)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(03)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(32)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(15)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(05)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(10)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(10)  VALUE ALL '-'.
+          05                       PIC X(24)  VALUE SPACES.
+
+      * LIGNE 6 : INSCRIPTION DES VALEURS DANS COLONNE (CLIENT)
+       01 L6.
+          05 ED-NUMCLI             PIC 9(02)  VALUE 0.
+          05                       PIC X(07)  VALUE SPACES.
+          05 ED-STATUT-CLI         PIC X(01)  VALUE SPACES.
+          05                       PIC X(08)  VALUE SPACES.
+          05 ED-TYPCLI             PIC X(01)  VALUE SPACES.
+          05                       PIC X(05)  VALUE SPACES.
+          05 ED-NOM000             PIC X(15)  VALUE SPACES.
+          05                       PIC X      VALUE ','.
+          05                       PIC X      VALUE SPACES.
+          05 ED-PRENOM             PIC X(15)  VALUE SPACES.
+          05                       PIC X(03)  VALUE SPACES.
+          05 ED-VILLE0             PIC X(15)  VALUE SPACES.
+          05                       PIC X(03)  VALUE SPACES.
+          05 ED-CDPOST             PIC X(05)  VALUE SPACES.
+          05                       PIC X(03)  VALUE SPACES.
+          05 ED-DATENT             PIC X(10)  VALUE SPACES.
+          05                       PIC X(03)  VALUE SPACES.
+          05 ED-DATMAJ             PIC X(10)  VALUE SPACES.
+          05                       PIC X(24)  VALUE SPACES.
+
+      * LIGNE 7 : SEPARATION AVEC ESPACES
+       01 L7.
+          05                       PIC X(132) VALUE SPACES.
+
+      * LIGNE 8 : INTITULES DE CHAQUE COLONNE (COMPTE)
+       01 L8.
+          05                       PIC X(06)  VALUE 'COMPTE'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(06)  VALUE 'STATUT'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(10)  VALUE 'SOLDE'.
+          05                       PIC X(104) VALUE SPACES.
+
+      * LIGNE 9 : SEPARATION AVEC TIRETS
+       01 L9.
+          05                       PIC X(06)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(06)  VALUE ALL '-'.
+          05                       PIC X(03)  VALUE SPACES.
+          05                       PIC X(10)  VALUE ALL '-'.
+          05                       PIC X(104) VALUE SPACES.
+
+      * LIGNE 10 : INSCRIPTION DES VALEURS DANS COLONNE
+      *            DONNEES DU COMPTE
+       01 L10.
+          05 ED-NUMCPT             PIC Z(04)  VALUE SPACES.
+          05                       PIC X(07)  VALUE SPACES.
+          05 ED-STATUT-COM         PIC X      VALUE SPACES.
+          05                       PIC X(08)  VALUE SPACES.
+          05 ED-SOLDE0             PIC +Z(9),99 VALUE ZEROES.
+          05                       PIC X(104) VALUE SPACES.
+
+      * LIGNE 11 : SEPARATION AVEC ESPACES
+       01 L11.
+          05                       PIC X(132) VALUE SPACES.
+
+      * LIGNE 12 : NOMBRE DE CLIENTS
+       01 L12.
+          05                       PIC X(13)  VALUE 'NB CLIENTS : '.
+          05 ED-CPT-CLI            PIC 99     VALUE ZEROES.
+          05                       PIC X(116) VALUE SPACES.
+
+      * COMPTEURS POUR LIGNE 12 : NOMBRE DE CLIENTS
+       01 COMPTEURS.
+         05 CPT-CLI                PIC 99     VALUE ZEROES.
+
+      * EDITION DU SQLCODE
+       01 ED-SQLCODE               PIC +(10)  VALUE SPACES.
+
+      * VARIABLES TEMPORAIRE POUR COMPARAISON DU NUMERO CLIENT
+      * ET NUMERO DU COMPTE
+       01 T-NUMCLI                 PIC 9(4)   VALUE ZEROES.
+       01 T-NUMCPT                 PIC 9(4)   VALUE ZEROES.
+
+      * INDICATION FIN DE LISTE POUR CURSEUR
+       01                          PIC X.
+          88 FIN-LISTE                        VALUE '1'.
+
+      * ZCOM AVEC SOUS-PROGRAMME DE DATE (NOM : SPDAT)
+       01  ZCOM.
+           05 ZDATE.
+              10 ZANNEE        PIC 9(4).
+              10 ZMOIS         PIC 9(2).
+              10 ZJOUR         PIC 9(2).
+           05 ZCDRET           PIC 9.
+              88 ZCDRET-OK                         VALUE 0.
+              88 ZCDRET-KO                         VALUE 1.
+           05 ZDATE-EDIT       PIC X(17).
+       01  SPDAT               PIC X(8)            VALUE 'SPDAT'.
+
+
+      ******************************************************************
+      *                                                                *
+      *             P R O C E D U R E    D I V I S I O N               *
+      *                                                                *
+      ******************************************************************
+       PROCEDURE DIVISION.
+           PERFORM DEBUT
+           PERFORM FETCH-LISTE
+           PERFORM UNTIL FIN-LISTE
+             MOVE HVCLI-NUMCLI TO T-NUMCLI
+             PERFORM CLIENT
+               PERFORM UNTIL HVCLI-NUMCLI NOT = T-NUMCLI OR FIN-LISTE
+                  PERFORM COMPTE
+                  PERFORM FETCH-LISTE
+               END-PERFORM
+           MOVE L3 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+           WRITE ENR-BAC2ED
+           END-PERFORM
+           PERFORM FIN-EDIT
+           PERFORM FIN
+           .
+
+      ******************************************************************
+      *                                                                *
+      *  ETIQUETTE DEBUT :  OUVERTURE FICHIER D'EDITION (NOM : BAC2ED) *
+      *                     ECRITURE DE L'ENTETE                       *
+      *                     OUVERTURE DU CURSEUR                       *
+      *                                                                *
+      ******************************************************************
+       DEBUT.
+      * OUVERTURE FICHIER EDITION
+           OPEN OUTPUT BAC2ED
+           IF FS-BAC2ED NOT = ZEROES
+             DISPLAY 'ERR OPEN BAC2ED, FS : ' FS-BAC2ED
+             PERFORM FIN
+           END-IF
+
+      * ECRITURE DE L'ENTETE (3 PREMIERES LIGNES)
+           MOVE FUNCTION CURRENT-DATE TO ZDATE
+           CALL SPDAT USING ZCOM
+           IF ZCDRET-OK
+              MOVE ZDATE-EDIT TO ED-DAT
+           END-IF
+           MOVE L1 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE L2 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE L3 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+      * OUVERTURE DU CURSEUR
+           EXEC SQL OPEN LISTE END-EXEC
+           IF FS-BAC2ED NOT = ZEROES
+             DISPLAY 'ERR OPEN BAC2ED, FS : ' FS-BAC2ED
+             PERFORM FIN
+           END-IF
+           .
+
+      ******************************************************************
+      *                      C U R S E U R                             *
+      ******************************************************************
+       FETCH-LISTE.
+           EXEC SQL FETCH LISTE
+             INTO
+                 :HVCLI-NUMCLI,
+                 :HVCLI-STATUT,
+                 :HVCLI-TYPCLI,
+                 :HVCLI-NOM000,
+                 :HVCLI-PRENOM,
+                 :HVCLI-VILLE0,
+                 :HVCLI-CDPOST,
+                 :HVCLI-DATENT,
+                 :HVCLI-DATMAJ,
+                 :HVCOM-NUMCPT,
+                 :HVCOM-STATUT,
+                 :HVCOM-SOLDE0
+           END-EXEC
+           EVALUATE SQLCODE
+             WHEN ZEROES
+               CONTINUE
+             WHEN +100
+               SET FIN-LISTE TO TRUE
+             WHEN OTHER
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY 'ERR FETCH CURSEUR LISTE : ' ED-SQLCODE
+               PERFORM FIN
+           END-EVALUATE
+           .
+
+      ******************************************************************
+      * RECUPERATION ET INSCRIPTION DES VALEURS DU CLIENT DANS COLONNE *
+      ******************************************************************
+       CLIENT.
+           MOVE L3 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE L4 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE L5 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE HVCLI-NUMCLI TO ED-NUMCLI
+           MOVE HVCLI-STATUT TO ED-STATUT-CLI
+           MOVE HVCLI-TYPCLI TO ED-TYPCLI
+           MOVE HVCLI-NOM000 TO ED-NOM000
+           MOVE HVCLI-PRENOM TO ED-PRENOM
+           MOVE HVCLI-VILLE0 TO ED-VILLE0
+           MOVE HVCLI-CDPOST TO ED-CDPOST
+           MOVE HVCLI-DATENT TO ED-DATENT
+           MOVE HVCLI-DATMAJ TO ED-DATMAJ
+           MOVE L6 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE L7 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE L8 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE L9 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           ADD 1 TO CPT-CLI
+           .
+
+      ******************************************************************
+      * RECUPERATION ET INSCRIPTION DES VALEURS DU COMPTE DANS COLONNE *
+      ******************************************************************
+       COMPTE.
+           MOVE HVCLI-NUMCLI TO T-NUMCLI
+           MOVE HVCOM-NUMCPT TO ED-NUMCPT
+           MOVE HVCOM-STATUT TO ED-STATUT-COM
+           MOVE HVCOM-SOLDE0 TO ED-SOLDE0
+           MOVE L10 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+           .
+
+      ******************************************************************
+      *    ECRITURE DERNIERES LIGNES (11 ET 12) & ETIQUETTES DE FIN    *
+      ******************************************************************
+       FIN-EDIT.
+           MOVE CPT-CLI TO ED-CPT-CLI
+           MOVE L11 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+
+           MOVE L12 TO LIG-BAC2ED
+           WRITE ENR-BAC2ED
+           .
+
+       FIN.
+           CLOSE BAC2ED
+           EXEC SQL CLOSE LISTE END-EXEC
+           STOP RUN.
+
+      *                                                 ////
+      *                                                (OO)
+      *                                          -OOO--(__)--OOO-

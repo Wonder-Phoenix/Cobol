@@ -1,0 +1,356 @@
+#*******************************************************************************************************************#
+#  ÉNONCÉ : Écrire et tester un sous-programme qui contrôle une date au format AAAAMMJJ renseignée par un programme #
+#           principal et la retourne au format JJ libellé du mois AAAA (ex : 28 MARS 2023, 12 SEPTEMBRE 1999).      #
+#                                                                                                                   #
+#           La zone de communication comporte :                                                                     #
+#             - une date au format AAAAMMJJ renseignée par le programme principal                                   #
+#             - un code retour renseigné par le sous-programme (0 si pas d'erreur, 1 si erreur)                     #
+#             - une date formatée renseignée par le sous-programme (la variable doit être suffisamment grande pour  #
+#                contenir le format désiré)                                                                         #
+#                                                                                                                   #
+#           Fonctions du sous-programme                                                                             #
+#            1) Contrôles à effectuer sur la date :                                                                 #
+#             - test de numéricité : la date doit être numérique                                                    #
+#             - test de cohérence :                                                                                 #
+#                - sur le mois (de 1 à 12),                                                                         #
+#                - sur les jours (de 1 au nombre de jours du mois, effectuer le contrôle en fonction des            #
+#                   années bissextiles pour le mois de février : les années divisibles par 400 sont                 #
+#                   bissextiles, les centenaires ne le sont pas, les années divisibles par 4 le sont),              #
+#                - pas de contrôle sur l'année à part la numéricité déjà effectuée                                  #
+#                                                                                                                   #
+#           S'il y a une erreur le sous-programme positionne le code retour à 1 et rend la main au programme        #
+#           principal, sinon il effectue le formatage de la date avec le libellé du mois                            #
+#                                                                                                                   #
+#           2) Formatage de la date : Décrire une table des mois de l'année en working-storage comportant pour      #
+#              chaque mois le nombre de jours maximum. En procédure faire un traitement particulier pour le mois de #
+#              février.                                                                                             #
+#*******************************************************************************************************************#
+
+
+#*******************************************************************#
+#                            JEU DE TEST                            #
+#*******************************************************************#
+
+Date à contrôler | Année bissextile | Date valide | Date formatée
+  AABCDEFGH      |                  |     Non     |
+  21000001       |                  |     Non     |
+  21001301       |                  |     Non     |
+  21000500       |                  |     Non     |
+  21000532       |                  |     Non     |
+  20230229       |        Non       |     Non     |
+  21000229       |        Non       |     Non     |
+  20230301       |                  |     Oui     | 01 MARS 2023
+  20230430       |                  |     Oui     | 30 AVRIL 2023
+  20230228       |        Non       |     Oui     | 28 FEVRIER 2023
+  20000229       |        Oui       |     Oui     | 29 FEVRIER 2000
+  20240229       |        Oui       |     Oui     | 29 FEVRIER 2024
+
+
+
+#*******************************************************************#
+#                        PROGRAMME APPELANT                         #
+#*******************************************************************#
+
+CBL DYNAM
+    IDENTIFICATION DIVISION.
+    PROGRAM-ID. EXO9PP.
+    AUTHOR. OTEUR.
+    DATE-WRITTEN. 28/03/2023.
+   ******************************************************************
+   *  FONCTION DU PROGRAMME :  PROGRAMME APPELANT                   *
+   *  230328 : CREATION DU PROGRAMME                                *
+   ******************************************************************
+    ENVIRONMENT DIVISION.
+    CONFIGURATION SECTION.
+    SPECIAL-NAMES.
+        DECIMAL-POINT IS COMMA.
+    DATA DIVISION.
+    WORKING-STORAGE SECTION.
+    01  EXO9SP         PIC X(8) VALUE 'EXO9SP'.
+   * DESCRIPTION DE LA ZONE DE COMMUNICATION AVEC LE SOUS-PROGRAMME
+   * DE CONTROLE DE LA DATE
+
+    01  ZCOM.
+        05 ZDATE.
+           10 ZANNEE          PIC 9(4).
+           10 ZMOIS           PIC 9(2).
+           10 ZJOUR           PIC 9(2).
+        05 ZCDRET             PIC 9.
+           88 ZCDRET-OK                   VALUE 0.
+           88 ZCDRET-KO                   VALUE 1.
+        05 ZDATE-EDIT         PIC X(17).
+
+    PROCEDURE DIVISION.
+   * CONSTITUTION DU JEU DE TESTS
+   * ---> DATES INVALIDES
+        INITIALIZE ZCOM
+        MOVE 'ABCDEFGH'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '21000001'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '21001301'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '21000500'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '21000532'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '20230229'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '21000229'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+
+   * ---> DATES VALIDES
+
+        INITIALIZE ZCOM
+        MOVE '20230301'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '20230430'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '20230228'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '20000229'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+        INITIALIZE ZCOM
+        MOVE '20240229'        TO ZDATE
+        PERFORM APPEL-EXO9SP
+
+        STOP RUN
+        .
+
+    APPEL-EXO9SP.
+        DISPLAY '-----------------------------------'
+        DISPLAY 'ZDATE : ' ZDATE
+
+        CALL EXO9SP USING ZCOM
+
+        EVALUATE TRUE
+         WHEN ZCDRET-OK
+              DISPLAY '      DATE VALIDE'
+              DISPLAY '      ZDATE-EDIT : ' ZDATE-EDIT
+         WHEN ZCDRET-KO
+              DISPLAY '      DATE INVALIDE'
+        END-EVALUATE
+        .
+
+
+#*******************************************************************#
+#                          SOUS PROGRAMME                           #
+#*******************************************************************#
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. EXO9SP.
+       AUTHOR. OTEUR.
+       DATE-WRITTEN. 29/03/2023.
+      ******************************************************************
+      *  FONCTION DU SOUS-PROGRAMME: CONTROLE ET FORMATAGE D'UNE DATE  *
+      *  230329 : CREATION DU PROGRAMME                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      * DESCRIPTION DE LA TABLE DES MOIS
+       01  TAB-MOIS.
+           05                 PIC X(11) VALUE '31JANVIER'.
+           05                 PIC X(11) VALUE '28FEVRIER'.
+           05                 PIC X(11) VALUE '31MARS'.
+           05                 PIC X(11) VALUE '30AVRIL'.
+           05                 PIC X(11) VALUE '31MAI'.
+           05                 PIC X(11) VALUE '30JUIN'.
+           05                 PIC X(11) VALUE '31JUILLET'.
+           05                 PIC X(11) VALUE '31AOUT'.
+           05                 PIC X(11) VALUE '30SEPTEMBRE'.
+           05                 PIC X(11) VALUE '31OCTOBRE'.
+           05                 PIC X(11) VALUE '30NOVEMBRE'.
+           05                 PIC X(11) VALUE '31DECEMBRE'.
+       01  REDEFINES TAB-MOIS.
+           05 POSTE OCCURS 12.
+              10 NB-JOURS     PIC 99.
+              10 LIB-MOIS     PIC X(9).
+
+      * ZONES POUR CALCUL ANNEE BISSEXTILE
+       01  QUOTIENT           PIC 9(4)  VALUE ZEROES.
+       01  RESTE              PIC 9(4)  VALUE ZEROES.
+
+       LINKAGE SECTION.
+      * DESCRIPTION DE LA ZONE DE COMMUNICATION AVEC LE PROGRAMME
+      * APPELANT
+       01  ZCOM.
+           05 ZDATE.
+              10 ZANNEE       PIC 9(4).
+              10 ZMOIS        PIC 9(2).
+              10 ZJOUR        PIC 9(2).
+           05 ZCDRET          PIC 9.
+              88 ZCDRET-OK              VALUE 0.
+              88 ZCDRET-KO              VALUE 1.
+           05 ZDATE-EDIT      PIC X(17).
+
+
+       PROCEDURE DIVISION USING ZCOM.
+           PERFORM CONTROLE-DATE
+           IF ZCDRET-OK
+              PERFORM FORMATAGE-DATE
+           END-IF
+
+           PERFORM FIN
+           .
+
+       CONTROLE-DATE.
+           SET ZCDRET-KO TO TRUE
+
+
+      * CONTROLE DE NUMERICITE DE LA DATE
+           IF ZDATE NOT NUMERIC
+              PERFORM FIN
+           END-IF
+
+      * CONTROLE DU MOIS
+           IF ZMOIS < 1 OR > 12
+              PERFORM FIN
+           END-IF
+
+      * CONTROLE NB JOURS FEVRIER
+           IF ZMOIS = 2
+              PERFORM ALIM-NB-JOURS-FEVRIER
+           END-IF
+
+      * CONTROLE DU JOUR DANS LA TABLE SELON LE MOIS SAISI QUI
+      * CORRESPOND AU NUMERO DU POSTE DANS LA TABLE
+           IF ZJOUR < 1 OR > NB-JOURS(ZMOIS)
+              PERFORM FIN
+           END-IF
+
+      * SI PAS D'ERREUR METTRE 0 DANS CODE RETOUR
+           SET ZCDRET-OK TO TRUE
+           .
+
+       ALIM-NB-JOURS-FEVRIER.
+      * - LES ANNEES DIVISIBLES PAR 400 SONT BISSEXTILES
+      * - LES CENTENAIRES NE SONT PAS BISSEXTILES
+      * - LES ANNEES DIVISIBLES PAR 4 SONT BISSEXTILES
+      *    DIVIDE ZANNEE BY 4 GIVING QUOTIENT REMAINDER RESTE
+
+
+           IF FUNCTION REM(ZANNEE, 400) = ZEROES
+              ADD 1 TO NB-JOURS(2)
+              DISPLAY '       ' ZANNEE ' BISSEXTILE'
+           ELSE
+              IF FUNCTION REM(ZANNEE, 100) = ZEROES
+                 DISPLAY '       ' ZANNEE ' NON BISSEXTILE'
+              ELSE
+                 IF FUNCTION REM(ZANNEE, 4) = ZEROES
+                    ADD 1 TO NB-JOURS(2)
+                    DISPLAY '      ' ZANNEE ' BISSEXTILE'
+                 ELSE
+                    DISPLAY '      ' ZANNEE ' NON BISSEXTILE'
+                 END-IF
+              END-IF
+           END-IF
+           .
+
+       FORMATAGE-DATE.
+           STRING ZJOUR            DELIMITED BY SIZE
+                  SPACES           DELIMITED BY SIZE
+                  LIB-MOIS(ZMOIS)  DELIMITED BY SPACES
+                  SPACES           DELIMITED BY SIZE
+                  ZANNEE           DELIMITED BY SIZE
+           INTO ZDATE-EDIT         DELIMITED BY SIZE
+           .
+
+       FIN.
+            GOBACK.
+
+
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API8PP   JOB 'SDJ FORMATION',MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,
+//   NOTIFY=&SYSUID,COND=(4,LT),TIME=(,3),RESTART=*
+//*
+//* BIBLIOTHEQUE DES LOAD MODULES
+//JOBLIB   DD DSN=API8.COBOL.LOAD,DISP=SHR
+//         DD DSN=CEE.SCEERUN,DISP=SHR
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API8.SOURCE.COBOL(EXO9SP)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//LKED.SYSLMOD DD   DSN=API8.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME EXO9SP(R)
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API8.SOURCE.COBOL(EXO9PP)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//LKED.SYSLMOD DD   DSN=API8.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME EXO9PP(R)
+//*
+//* EXECUTION DU PROGRAMME
+//STEP2        EXEC PGM=EXO9PP
+//SYSOUT       DD   SYSOUT=*
+//
+
+
+
+#*******************************************************************#
+#                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
+#*******************************************************************#
+
+-----------------------------------
+ZDATE : ABCDEFGH
+       DATE INVALIDE
+-----------------------------------
+ZDATE : 21000001
+       DATE INVALIDE
+-----------------------------------
+ZDATE : 21001301
+       DATE INVALIDE
+-----------------------------------
+ZDATE : 21000500
+       DATE INVALIDE
+-----------------------------------
+ZDATE : 21000532
+       DATE INVALIDE
+-----------------------------------
+ZDATE : 20230229
+       2023 NON BISSEXTILE
+       DATE INVALIDE
+-----------------------------------
+ZDATE : 21000229
+       2100 NON BISSEXTILE
+       DATE INVALIDE
+-----------------------------------
+ZDATE : 20230301
+DATE VALIDE
+       ZDATE-EDIT : 01 MARS 2023
+-----------------------------------
+ZDATE : 20230430
+DATE VALIDE
+       ZDATE-EDIT : 30 AVRIL 2023
+-----------------------------------
+ZDATE : 20230228
+       2023 NON BISSEXTILE
+       DATE VALIDE
+       ZDATE-EDIT : 28 FEVRIER 2023
+-----------------------------------
+ZDATE : 20000229
+       2000 BISSEXTILE
+       DATE VALIDE
+       ZDATE-EDIT : 29 FEVRIER 2000
+-----------------------------------
+ZDATE : 20240229
+       2024 BISSEXTILE
+       DATE VALIDE
+       ZDATE-EDIT : 29 FEVRIER 2024

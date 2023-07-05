@@ -1,0 +1,242 @@
+#********************************************************************************************************************#
+#  ÉNONCÉ : Écrire et tester un programme qui lit tous les enregistrements d'un fichier séquentiel et affiche leur   #
+#           contenu dans un format d'édition. Une compagnie d’assurances désire réaliser une chaîne batch pour       #
+#           traiter le fichier des assurés (description ci-après).                                                   #
+#                                                                                                                    #
+#           Écrire un programme qui va imprimer sur un fichier d’édition la quittance suivant le modèle fourni en    #
+#           annexe en ajoutant le jour, date du jour et heure et en supprimant les zéros non significatifs des       #
+#           montants affichés.                                                                                       #
+#********************************************************************************************************************#
+
+PROGRAMME DE LECTURE D'UN FICHIER SEQUENTIEL
+
+Description des enregistrements du fichier des assurés :
+Dataset Name : APIn.COB.ASSURES
+Longueur fixe : 80 caractères
+- Matricule : 6 entiers
+- Nom prénom : 20 alphanumériques
+- Rue adresse : 18 alphanumériques
+- Code postal : 5 entiers
+- Ville : 12 alphanumériques
+- Type véhicule : 1 alphanumérique (valeurs 'C', 'M', 'V')
+- Prime de base : 4 entiers, 2 décimales
+- Indicateur Bonus, Malus : 1 alphanumérique (valeurs 'B', 'M')
+- Taux : 2 entiers (indique un pourcentage)
+
+
+
+#*******************************************************************#
+#                            PROGRAMME                              #
+#*******************************************************************#
+
+ IDENTIFICATION DIVISION.
+ PROGRAM-ID. FEXO1.
+ AUTHOR. OTEUR.
+ DATE-WRITTEN. 29/03/2023.
+*********************************************************************
+* FONCTION DU PROGRAMME : LECTURE DU FICHIER SEQUENTIEL DES ASSURÉS *
+*********************************************************************
+ ENVIRONMENT DIVISION.
+ CONFIGURATION SECTION.
+ SPECIAL-NAMES.
+     DECIMAL-POINT IS COMMA.
+     
+ INPUT-OUTPUT SECTION.
+ FILE-CONTROL.
+     SELECT ASSURES ASSIGN ASSURDD
+            ORGANIZATION IS SEQUENTIAL
+            ACCESS MODE  IS SEQUENTIAL
+            FILE STATUS  IS FS-ASSURES.
+ DATA DIVISION.
+ FILE SECTION.
+ FD  ASSURES
+     RECORDING MODE IS F.
+     COPY COPYASSU.
+     
+ WORKING-STORAGE SECTION.
+ 01  FS-ASSURES        PIC 99       VALUE ZEROES.
+ 
+* DECLARATION DES VARIABLES DE TRAVAIL ET D'EDITION
+ 01  PRIME-ED            PIC ZZZ9,99      VALUE ZEROES.
+ 01  MAJO-DEGREV         PIC S9(4)V99     VALUE ZEROES.
+ 01  MAJO-DEGREV-ED      PIC +(4)9,99     VALUE ZEROES.
+ 01  TOTAL               PIC 9(5)V99      VALUE ZEROES.
+ 01  TOTAL-ED            PIC Z(4)9,99     VALUE ZEROES.
+
+ 01                      PIC 9            VALUE ZEROES.
+     88 FIN-FICHIER                       VALUE 5.
+     
+ 01  CPT-LUS             PIC 99           VALUE ZEROES.
+ 
+ PROCEDURE DIVISION.
+
+* DEBUT : OUVERTURE DU FICHIER + 1ERE LECTURE
+     PERFORM DEBUT
+* BOUCLE DE TRAITEMENT SE TERMINANT PAR LA LECTURE DE
+* L'ENREGISTREMENT SUIVANT
+     PERFORM UNTIL FIN-FICHIER
+        PERFORM TRT-ENR
+        PERFORM READ-FICHIER
+     END-PERFORM
+* FIN : AFFICHAGE DES COMPTEURS, CLOSE, ARRET PROGRAMME
+     PERFORM FIN
+     .
+     
+ DEBUT.
+     PERFORM OPEN-FICHIER
+* 1ERE LECTURE
+     PERFORM READ-FICHIER
+     IF FIN-FICHIER
+        DISPLAY 'FICHIER ASSURES VIDE'
+        MOVE 99 TO RETURN-CODE
+        PERFORM FIN
+     END-IF
+     .
+     
+ TRT-ENR.
+* EDITION DES INFORMATIONS CIVILES
+     DISPLAY '------------------------------------------'
+     DISPLAY 'QUITTANCE DE PRIME'
+     DISPLAY '               *** ' ENR-MATRICULE
+     DISPLAY '               *** ' ENR-NOM-PRENOM
+     DISPLAY '               *** ' ENR-RUE-ADRESSE
+     DISPLAY '               *** ' ENR-CODE-POSTAL
+             ' / '                 ENR-VILLE
+
+* EDITION DE LA PRIME DE BASE
+     MOVE ENR-PRIME                TO PRIME-ED
+     DISPLAY 'PRIME DE BASE  '     PRIME-ED
+     
+* CALCUL ET EDITION DE LA MAJORATION OU DU DEGREVEMENT
+     EVALUATE ENR-BONUS-MALUS
+      WHEN 'B'
+       COMPUTE MAJO-DEGREV =
+               ENR-PRIME * (ENR-TAUX / 100) * -1
+       MOVE MAJO-DEGREV            TO MAJO-DEGREV-ED
+       DISPLAY 'DEGREVEMENT      '    MAJO-DEGREV-ED
+               ' BONUS '              ENR-TAUX '%'
+      WHEN 'M'
+       COMPUTE MAJO-DEGREV =
+               ENR-PRIME * (ENR-TAUX / 100)
+       MOVE MAJO-DEGREV            TO MAJO-DEGREV-ED
+       DISPLAY 'MAJORATION      '     MAJO-DEGREV-ED
+               ' MALUS '              ENR-TAUX '%'
+     END-EVALUATE
+
+* CALCUL ET EDITION DU TOTAL A PAYER
+     COMPUTE TOTAL = ENR-PRIME + MAJO-DEGREV
+     MOVE TOTAL                    TO TOTAL-ED
+     DISPLAY 'TOTAL A PAYER '      TOTAL-ED
+     .
+     
+ OPEN-FICHIER.
+* OUVERTURE DU FICHIER EN LECTURE
+     OPEN INPUT ASSURES
+     IF FS-ASSURES NOT = ZEROES
+        DISPLAY 'ERREUR OPEN ASSURES, FS = ' FS-ASSURES
+        MOVE 99 TO RETURN-CODE
+        PERFORM FIN
+     END-IF
+     .
+     
+ READ-FICHIER.
+* LECTURE DE L'ENREGISTREMENT SUIVANT
+     READ ASSURES
+* POSITIONNEMENT DE L'INDICATEUR DE FIN DE FICHIER
+* ET INCREMENTATION DU COMPTEUR D'ENR LUS
+       AT END      SET FIN-FICHIER TO TRUE
+       NOT AT END  ADD 1 TO CPT-LUS
+     END-READ
+     
+     IF FS-ASSURES NOT = ZEROES AND NOT = 10
+         DISPLAY 'ERREUR READ ASSURES, FS = ' FS-ASSURES
+         PERFORM FIN
+     END-IF
+     .
+     
+ FIN.
+* AFFICHAGE DES COMPTEURS
+     DISPLAY 'NB ENR LUS : ' CPT-LUS
+* FERMETURE DU FICHIER
+     CLOSE ASSURES
+     
+     STOP RUN.
+
+
+    
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API7F1   JOB 'SDJ FORMATION',MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,
+//   NOTIFY=&SYSUID,COND=(4,LT),TIME=(,3),RESTART=*
+//*
+//* BIBLIOTHEQUE DES LOAD MODULES
+//JOBLIB   DD DSN=API7.COBOL.LOAD,DISP=SHR
+//         DD DSN=CEE.SCEERUN,DISP=SHR
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API7.SOURCE.COBOL(FEXO1)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//             DD   DISP=SHR,DSN=API7.SOURCE.COPY
+//LKED.SYSLMOD DD   DSN=API7.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME FEXO1(R)
+//*
+//* EXECUTION DU PROGRAMME
+//STEP2        EXEC PGM=FEXO1
+//SYSOUT       DD   SYSOUT=*
+//ASSURDD      DD   DSN=API7.COB.ASSURES,DISP=SHR
+//
+
+
+#*******************************************************************#
+#                 SYSOUT / COMPTE-RENDU D'EXECUTION                 #
+#*******************************************************************#
+------------------------------------------
+QUITTANCE DE PRIME
+               *** 234563
+               *** BREMAN ANDRE
+               *** 18 RUE DES ROSES
+               *** 13000 / MARSEILLE
+PRIME DE BASE  2000,50
+DEGREVEMENT    -400,10 BONUS 20%
+TOTAL A PAYER  1600,40
+------------------------------------------
+QUITTANCE DE PRIME
+               *** 004563
+               *** BREJON PIERRE
+               *** 08 BD MAGENTA
+               *** 75010 / PARIS
+PRIME DE BASE  5060,20
+DEGREVEMENT    -253,01 BONUS 05%
+TOTAL A PAYER  4807,19
+------------------------------------------
+QUITTANCE DE PRIME
+               *** 110006
+               *** CRENON MARIE-JEANNE
+               *** 54 RUE DU LYCEE
+               *** 21020 / BEAUNE
+PRIME DE BASE  2800,00
+MAJORATION     +280,00 MALUS 10%
+TOTAL A PAYER  3080,00
+------------------------------------------
+QUITTANCE DE PRIME
+               *** 111163
+               *** RIVIERE PAUL-LOUIS
+               *** 101 BD HOSPITALIER
+               *** 24000 / PERIGUEUX
+PRIME DE BASE  2000,50
+MAJORATION     +600,15 MALUS 30%
+TOTAL A PAYER  2600,65
+------------------------------------------
+QUITTANCE DE PRIME
+               *** 200500
+               *** BARJAVEL MARIE
+               *** 20 RUE LALANDE
+               *** 75014 / PARIS
+PRIME DE BASE  5060,20
+MAJORATION     +506,02 MALUS 10%
+TOTAL A PAYER  5566,22
+------------------------------------------
+ETC...

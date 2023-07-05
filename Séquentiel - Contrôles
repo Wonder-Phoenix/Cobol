@@ -1,0 +1,471 @@
+#********************************************************************************************************************#
+#  ÉNONCÉ : Programme de contrôle d'un fichier sequentiel                                                            #
+#********************************************************************************************************************#
+
+#PROGRAMME - SOUS-PROGRAMME - JCL - CONTENU FICHIER COB.MVT - COMPTE-RENDU D'EXECUTION
+
+
+#*******************************************************************#
+#                            PROGRAMME                              #
+#*******************************************************************#
+ CBL DYNAM
+     IDENTIFICATION DIVISION.
+     PROGRAM-ID. FEXO2.
+     AUTHOR. SV.
+     DATE-WRITTEN. 31/03/2023.
+     
+     ENVIRONMENT DIVISION.
+     CONFIGURATION SECTION.
+     SPECIAL-NAMES.
+         DECIMAL-POINT IS COMMA.
+
+     INPUT-OUTPUT SECTION.
+     FILE-CONTROL.
+         SELECT MVT ASSIGN MVTDD
+                ORGANIZATION IS SEQUENTIAL
+                ACCESS MODE  IS SEQUENTIAL
+                FILE STATUS  IS FS-MVT.
+                
+     DATA DIVISION.
+     FILE SECTION.
+     FD  MVT
+         RECORDING MODE IS F.
+         
+     01  ENR-MVT.
+          05 ENR-MATRICULE            PIC 9(6).
+          05 ENR-CODE-MVT             PIC X.
+          05 ENR-FILLER               PIC X(73).
+          05 ENR-TYPE-1 REDEFINES ENR-FILLER.
+             10 ENR-SIGNE             PIC X.
+             10 ENR-TAUX              PIC 99.
+             10                       PIC X(70).
+          05 ENR-TYPE-2 REDEFINES ENR-FILLER.
+             10 ENR-NOM-PRENOM        PIC X(20).
+             10                       PIC X(53).
+          05 ENR-TYPE-3 REDEFINES ENR-FILLER.
+             10 ENR-ADRESSE           PIC X(18).
+             10 ENR-CODE-POSTAL       PIC 9(5).
+             10 REDEFINES ENR-CODE-POSTAL.
+                 15 ENR-NUM-DEPT      PIC 99.
+                 15                   PIC 999.
+             10 ENR-VILLE             PIC X(12).
+             10                       PIC X(38).
+          05 ENR-TYPE-4 REDEFINES ENR-FILLER.
+             10 ENR-TYPE-VEHICULE     PIC X.
+             10 ENR-PRIME             PIC 9(4)V99.
+             10                       PIC X(66).
+             
+     WORKING-STORAGE SECTION.
+     
+     01  FS-MVT                       PIC 99  VALUE ZEROES.
+  
+     01                               PIC 9   VALUE ZEROES.
+        88 FIN-FICHIER                        VALUE 5.
+
+     01  CPT-LUS                      PIC 99  VALUE ZEROES.
+     
+    * TABLE DES TYPES DE VEHICULE
+     01  TAB-TYPE-VEHICULE.
+         05                           PIC X   VALUE 'C'.
+         05                           PIC X   VALUE 'M'.
+         05                           PIC X   VALUE 'V'.
+     01  REDEFINES TAB-TYPE-VEHICULE.
+         05 POSTE-TV                  PIC X   OCCURS 3.
+         
+    * INDICE DE PARCOURS DE LA TABLE
+     01  I                          PIC 9     VALUE ZEROES.
+       
+    * INDICATEUR TROUVE/NON TROUVE
+     01                             PIC 9     VALUE ZEROES.
+           88 TROUVE                          VALUE ZEROES.
+           88 NON-TROUVE                      VALUE 1.
+     
+    * ZONE DE COM : VARIABLES POUR APPEL DYNAMIQUE DU SOUS-PROGRAMME
+     01  ZCOM.
+           05 ZNUM-DEPT             PIC 99.
+           05 ZCDRET                PIC 9.
+           
+     01  SPDEPT                     PIC X(8)  VALUE 'SPDEPT'.
+     
+     PROCEDURE DIVISION.
+           PERFORM DEBUT
+           PERFORM UNTIL FIN-FICHIER
+              PERFORM TRT-ENR
+              PERFORM READ-FICHIER
+           END-PERFORM
+           PERFORM FIN
+           .
+       
+     DEBUT.
+    * OUVERTURE DU FICHIER
+           PERFORM OPEN-FICHIER
+    * 1ERE LECTURE
+           PERFORM READ-FICHIER
+           IF FIN-FICHIER
+              DISPLAY 'FICHIER MVT VIDE'
+              MOVE 99 TO RETURN-CODE
+              PERFORM FIN
+           END-IF
+           .
+           
+     TRT-ENR.
+           DISPLAY '------------------------------------------'
+           DISPLAY 'ENR NUM '           CPT-LUS
+                   ', MATRICULE : '     ENR-MATRICULE
+      
+    * CONTROLE DU MATRICULE - OBLIGATOIRE ET NUMERIQUE
+           IF ENR-MATRICULE NOT NUMERIC
+              DISPLAY 'MATRICULE NON NUMERIQUE'
+           END-IF
+           
+    * CONTROLE CODE MVT - OBLIGATOIRE, NUMERIQUE ET VALIDE
+           IF ENR-CODE-MVT  NOT NUMERIC
+              DISPLAY 'CODE MVT NON NUMERIQUE'
+           ELSE
+              IF ENR-CODE-MVT NOT = '1' AND '2' AND '3' AND '4'
+                 DISPLAY 'CODE MVT INCONNU'
+              END-IF
+           END-IF
+           
+    * CONTROLE DES CHAMPS EN FONCTION DU CODE MVT
+           EVALUATE ENR-CODE-MVT
+            WHEN '1'  PERFORM CTRL-TYPE-1
+            WHEN '2'  PERFORM CTRL-TYPE-2
+            WHEN '3'  PERFORM CTRL-TYPE-3
+            WHEN '4'  PERFORM CTRL-TYPE-4
+           END-EVALUATE
+           .
+           
+     CTRL-TYPE-1.
+    * CONTROLE DU SIGNE - VALEURS POSSIBLES + OU -
+           IF ENR-SIGNE NOT = '+' AND NOT = '-'
+              DISPLAY 'SIGNE INVALIDE'
+           END-IF
+           
+    * CONTROLE DU TAUX - NUMERIQUE
+           IF ENR-TAUX NOT NUMERIC
+              DISPLAY 'TAUX NON NUMERIQUE'
+           END-IF
+           .
+           
+     CTRL-TYPE-2.
+    * CONTROLE DU NOM - DOIT ETRE RENSEIGNE
+           IF ENR-NOM-PRENOM = SPACES
+              DISPLAY 'NOM NON RENSEIGNE'
+           END-IF
+           .
+      
+     CTRL-TYPE-3.
+    * CONTROLE DE L'ADRESSE - DOIT ETRE RENSEIGNE
+           IF ENR-TYPE-3 = SPACES
+              DISPLAY 'AU MOINS UNE ZONE ADRESSE DOIT ETRE RENSEIGNEE'
+           ELSE
+              IF ENR-CODE-POSTAL NOT NUMERIC
+                 DISPLAY 'CODE POSTAL INVALIDE'
+              ELSE
+                 PERFORM APPEL-SPDEPT
+                 IF ZCDRET = 1
+                    DISPLAY 'DEPARTEMENT INCONNU'
+                 END-IF
+              END-IF
+           END-IF
+           .
+           
+     CTRL-TYPE-4.
+    * CONTROLE TYPE VEHICULE : C, M OU V
+           SET NON-TROUVE TO TRUE
+           PERFORM VARYING I FROM 1 BY 1 UNTIL I > 3
+              IF ENR-TYPE-VEHICULE = POSTE-TV(I)
+                 SET TROUVE   TO TRUE
+                 MOVE 3       TO I
+              END-IF
+           END-PERFORM
+           
+           IF NON-TROUVE
+              DISPLAY 'TYPE VEHICULE INVALIDE'
+           END-IF
+           
+    * CONTROLE PRIME - NUMERIQUE
+           IF ENR-PRIME NOT NUMERIC
+              DISPLAY 'PRIME NON NUMERIQUE'
+           END-IF
+           .
+           
+     APPEL-SPDEPT.
+    * APPEL POUR CONTROLE DU NUM DEPT
+           INITIALIZE ZCOM
+           MOVE ENR-NUM-DEPT TO ZNUM-DEPT
+           CALL SPDEPT USING ZCOM
+           .
+     
+     OPEN-FICHIER.
+    * OUVERTURE DU FICHIER EN LECTURE
+           OPEN INPUT MVT
+           IF FS-MVT NOT = ZEROES
+              DISPLAY 'ERREUR OPEN MVT, FS = ' FS-MVT
+              MOVE 99 TO RETURN-CODE
+              PERFORM FIN
+           END-IF
+           .
+           
+     READ-FICHIER.
+    * LECTURE DE L'ENREGISTREMENT SUIVANT
+      READ MVT
+          AT END         SET FIN-FICHIER TO TRUE
+          NOT AT END     ADD 1 TO CPT-LUS
+      END-READ
+      
+      IF FS-MVT NOT = ZEROES AND NOT = 10
+         DISPLAY 'ERREUR READ MVT, FS = ' FS-MVT
+         PERFORM FIN
+      END-IF
+      .
+      
+     FIN.
+    * AFFICHAGE DES COMPTEURS
+           DISPLAY 'NB ENR LUS : ' CPT-LUS
+    * FERMETURE DU FICHIER
+           CLOSE MVT
+           
+           STOP RUN.
+
+
+
+#*******************************************************************#
+#                          SOUS PROGRAMME                           #
+#*******************************************************************#
+
+     IDENTIFICATION DIVISION.
+     PROGRAM-ID. SPDEPT.
+     AUTHOR. SV.
+     DATE-WRITTEN. 03/04/2023.
+    ******************************************************************
+    * FONCTION DU SOUS-PROGRAMME : CONTROLE DU NUMERO DE DEPARTEMENT *                            *
+    ******************************************************************
+     ENVIRONMENT DIVISION.
+     CONFIGURATION SECTION.
+     SPECIAL-NAMES
+          DECIMAL-POINT IS COMMA.
+      DATA DIVISION.
+      WORKING-STORAGE SECTION.
+     * TABLE DES NUMEROS DE DEPARTEMENTS
+      01  TAB-NUM-DEPT.
+          05                PIC 99    VALUE 50.
+          05                PIC 99    VALUE 51.
+          05                PIC 99    VALUE 52.
+          05                PIC 99    VALUE 53.
+          05                PIC 99    VALUE 54.
+          05                PIC 99    VALUE 55.
+          05                PIC 99    VALUE 56.
+          05                PIC 99    VALUE 57.
+          05                PIC 99    VALUE 58.
+          05                PIC 99    VALUE 59.
+      01  REDEFINES TAB-NUM-DEPT.
+          05 PNUM-DEPT      PIC 99 OCCURS 10.
+          
+     * INDICE DE PARCOURS DE LA TABLE
+      01  I                 PIC 99    VALUE ZEROES.
+      
+      LINKAGE SECTION.
+     * ZONE DE COMMUNICATION AVEC LE PROGRAMME 
+      01  ZCOM.
+           05 ZNUM-DEPT     PIC 99.
+           05 ZCDRET        PIC 9.
+           
+      PROCEDURE DIVISION USING ZCOM.
+     * RECHERCHE DU NUMERO DE DEPARTEMENT EN TABLE
+           MOVE 1 TO ZCDRET
+           PERFORM VARYING I FROM 1 BY 1 UNTIL I > 10 OR ZCDRET = ZERO
+              IF ZNUM-DEPT = PNUM-DEPT(I)
+                 MOVE ZERO TO ZCDRET
+              END-IF
+           END-PERFORM
+           GOBACK
+           .
+
+
+
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API7F2   JOB 'SDJ FORMATION',MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,
+//   NOTIFY=&SYSUID,COND=(4,LT),TIME=(,3),RESTART=*
+//*
+//* BIBLIOTHEQUE DES LOAD MODULES
+//JOBLIB   DD DSN=API7.COBOL.LOAD,DISP=SHR
+//         DD DSN=CEE.SCEERUN,DISP=SHR
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API7.SOURCE.COBOL(SPDEPT)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//             DD   DISP=SHR,DSN=API7.SOURCE.COPY
+//LKED.SYSLMOD DD   DSN=API7.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME SPDEPT(R)
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API7.SOURCE.COBOL(FEXO2)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//             DD   DISP=SHR,DSN=API7.SOURCE.COPY
+//LKED.SYSLMOD DD   DSN=API7.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME FEXO2(R)
+//*
+//* EXECUTION DU PROGRAMME
+//STEP2        EXEC PGM=FEXO2
+//SYSOUT       DD   SYSOUT=*
+//MVTDD        DD   DSN=API7.COB.MVT,DISP=SHR
+//
+
+
+
+
+#*******************************************************************#
+#                    CONTENU DU FICHIER APIn.COB.MVT                #
+#*******************************************************************#
+
+AAAAAAA
+BBBBBB1
+134000W
+1341201F
+1340221+AA
+1340301+10
+111163W
+1111651F
+1111671+AA
+1111681-10
+2004001-10
+111111W
+1111121F
+1111131+AA
+1111141-10
+1800031-10
+0006452
+0006462DUPOND  ALAIN
+2000032
+2000052DURAND  GERARD
+0045633
+004564318 RUE DE PARIS    AAAAAPARIS
+0045653268 RUE ANDRE           LILLE
+0045003
+004600332 BD LECLERC      AAAAANANTES
+0047003                   00004
+2133333
+213334328 RUE DU JARDIN  AAAAATOULOUSE
+2133353270 BD CLEMENCEAU 59000
+2000064A
+20001649AAAAAA
+20002648001200
+20003642012345
+200046=X123499
+
+
+
+#*******************************************************************#
+#                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
+#*******************************************************************#
+ ------------------------------------------
+ENR NUM 01, MATRICULE : AAAAAA
+MATRICULE NON NUMERIQUE
+CODE MVT NON NUMERIQUE
+------------------------------------------
+ENR NUM 02, MATRICULE : BBBBBB
+MATRICULE NON NUMERIQUE
+SIGNE INVALIDE
+TAUX NON NUMERIQUE
+------------------------------------------
+ENR NUM 03, MATRICULE : 134000
+CODE MVT NON NUMERIQUE
+------------------------------------------
+ENR NUM 04, MATRICULE : 134120
+SIGNE INVALIDE
+TAUX NON NUMERIQUE
+------------------------------------------
+ENR NUM 05, MATRICULE : 134022
+TAUX NON NUMERIQUE
+------------------------------------------
+ENR NUM 06, MATRICULE : 134030
+------------------------------------------
+ENR NUM 07, MATRICULE : 111163
+CODE MVT NON NUMERIQUE
+------------------------------------------
+ENR NUM 08, MATRICULE : 111165
+SIGNE INVALIDE
+TAUX NON NUMERIQUE
+------------------------------------------
+ENR NUM 09, MATRICULE : 111167
+TAUX NON NUMERIQUE
+------------------------------------------
+ENR NUM 10, MATRICULE : 111168
+------------------------------------------
+ENR NUM 11, MATRICULE : 200400
+------------------------------------------
+ENR NUM 12, MATRICULE : 111111
+CODE MVT NON NUMERIQUE
+------------------------------------------
+ENR NUM 13, MATRICULE : 111112
+SIGNE INVALIDE
+TAUX NON NUMERIQUE
+------------------------------------------
+ENR NUM 14, MATRICULE : 111113
+TAUX NON NUMERIQUE
+------------------------------------------
+ENR NUM 15, MATRICULE : 111114
+------------------------------------------
+ENR NUM 16, MATRICULE : 180003
+------------------------------------------
+ENR NUM 17, MATRICULE : 000645
+NOM NON RENSEIGNE
+------------------------------------------
+ENR NUM 18, MATRICULE : 000646
+------------------------------------------
+ENR NUM 19, MATRICULE : 200003
+NOM NON RENSEIGNE
+------------------------------------------
+ENR NUM 20, MATRICULE : 200005
+------------------------------------------
+ENR NUM 21, MATRICULE : 004563
+AU MOINS UNE ZONE ADRESSE DOIT ETRE RENSEIGNEE
+------------------------------------------
+
+ENR NUM 22, MATRICULE : 004564
+CODE POSTAL INVALIDE
+------------------------------------------
+ENR NUM 23, MATRICULE : 004565
+CODE POSTAL INVALIDE
+------------------------------------------
+ENR NUM 24, MATRICULE : 004500
+AU MOINS UNE ZONE ADRESSE DOIT ETRE RENSEIGNEE
+------------------------------------------
+ENR NUM 25, MATRICULE : 004600
+CODE POSTAL INVALIDE
+------------------------------------------
+ENR NUM 26, MATRICULE : 004700
+DEPARTEMENT INCONNU
+------------------------------------------
+ENR NUM 27, MATRICULE : 213333
+AU MOINS UNE ZONE ADRESSE DOIT ETRE RENSEIGNEE
+------------------------------------------
+ENR NUM 28, MATRICULE : 213334
+CODE POSTAL INVALIDE
+------------------------------------------
+ENR NUM 29, MATRICULE : 213335
+------------------------------------------
+ENR NUM 30, MATRICULE : 200006
+TYPE VEHICULE INVALIDE
+PRIME NON NUMERIQUE
+------------------------------------------
+ENR NUM 31, MATRICULE : 200016
+TYPE VEHICULE INVALIDE
+PRIME NON NUMERIQUE
+------------------------------------------
+ENR NUM 32, MATRICULE : 200026
+TYPE VEHICULE INVALIDE
+------------------------------------------
+ENR NUM 33, MATRICULE : 200036
+TYPE VEHICULE INVALIDE
+------------------------------------------
+ENR NUM 34, MATRICULE : 200046
+CODE MVT NON NUMERIQUE
+NB ENR LUS : 34

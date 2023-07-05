@@ -1,0 +1,228 @@
+      ******************************************************************
+      * DCLGEN TABLE(API0.BAC_CLIENT)                                  *
+      *        LIBRARY(API0.SOURCE.DCLGEN3(BCLIENT))                   *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(NO)                                               *
+      *        STRUCTURE(BAC-CLIENT)                                   *
+      *        QUOTE                                                   *
+      *        LABEL(YES)                                              *
+      *        DBCSDELIM(NO)                                           *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE API0.BAC_CLIENT TABLE
+           ( NUMCLI                         SMALLINT NOT NULL,
+             STATUT                         CHAR(1) NOT NULL,
+             TYPCLI                         CHAR(1) NOT NULL,
+             NOM000                         CHAR(15) NOT NULL,
+             PRENOM                         CHAR(15),
+             VILLE0                         CHAR(15),
+             CDPOST                         DECIMAL(5, 0),
+             DATENT                         DATE NOT NULL,
+             DATMAJ                         DATE NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE API0.BAC_CLIENT                    *
+      ******************************************************************
+       01  BAC-CLIENT.
+      *    *************************************************************
+      *                       NUMCLI
+           10 NO1                  PIC S9(4) USAGE COMP.
+      *    *************************************************************
+      *                       STATUT
+           10 NO2                  PIC X(1).
+      *    *************************************************************
+      *                       TYPCLI
+           10 NO3                  PIC X(1).
+      *    *************************************************************
+      *                       NOM000
+           10 NO4                  PIC X(15).
+      *    *************************************************************
+      *                       PRENOM
+           10 NO5                  PIC X(15).
+      *    *************************************************************
+      *                       VILLE0
+           10 NO6                  PIC X(15).
+      *    *************************************************************
+      *                       CDPOST
+           10 NO7                  PIC S9(5)V USAGE COMP-3.
+      *    *************************************************************
+      *                       DATENT
+           10 NO8                  PIC X(10).
+      *    *************************************************************
+      *                       DATMAJ
+           10 NO9                  PIC X(10).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 9       *
+      ******************************************************************
+
+
+
+
+
+
+
+      ******************************************************************
+      * DCLGEN TABLE(API0.BAC_COMPTE)                                  *
+      *        LIBRARY(API0.SOURCE.DCLGEN3(BCOMPTE))                   *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(NO)                                               *
+      *        STRUCTURE(BAC-COMPTE)                                   *
+      *        QUOTE                                                   *
+      *        LABEL(YES)                                              *
+      *        DBCSDELIM(NO)                                           *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE API0.BAC_COMPTE TABLE
+           ( NUMCPT                         SMALLINT NOT NULL,
+             STATUT                         CHAR(1) NOT NULL,
+             SOLDE0                         DECIMAL(11, 2) NOT NULL,
+             DATOUV                         DATE NOT NULL,
+             DATMAJ                         DATE NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE API0.BAC_COMPTE                    *
+      ******************************************************************
+       01  BAC-COMPTE.
+      *    *************************************************************
+      *                       NUMCPT
+           10 NO1                  PIC S9(4) USAGE COMP.
+      *    *************************************************************
+      *                       STATUT
+           10 NO2                  PIC X(1).
+      *    *************************************************************
+      *                       SOLDE0
+           10 NO3                  PIC S9(9)V9(2) USAGE COMP-3.
+      *    *************************************************************
+      *                       DATOUV
+           10 NO4                  PIC X(10).
+      *    *************************************************************
+      *                       DATMAJ
+           10 NO5                  PIC X(10).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 5       *
+      ******************************************************************
+
+
+
+
+
+
+
+      ******************************************************************
+      * DCLGEN TABLE(API0.BAC_CPTCLI)                                  *
+      *        LIBRARY(API0.SOURCE.DCLGEN3(BCPTCLI))                   *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(NO)                                               *
+      *        STRUCTURE(BAC-CPTCLI)                                   *
+      *        QUOTE                                                   *
+      *        LABEL(YES)                                              *
+      *        DBCSDELIM(NO)                                           *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE API0.BAC_CPTCLI TABLE
+           ( NUMCLI                         SMALLINT NOT NULL,
+             NUMCPT                         SMALLINT NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE API0.BAC_CPTCLI                    *
+      ******************************************************************
+       01  BAC-CPTCLI.
+      *    *************************************************************
+      *                       NUMCLI
+           10 NO1                  PIC S9(4) USAGE COMP.
+      *    *************************************************************
+      *                       NUMCPT
+           10 NO2                  PIC S9(4) USAGE COMP.
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 2       *
+      ******************************************************************
+
+
+
+
+      ******************************************************************
+      * DCLGEN TABLE(API0.BAC_OPER)                                    *
+      *        LIBRARY(API0.SOURCE.DCLGEN3(BOPER))                     *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(NO)                                               *
+      *        STRUCTURE(BAC-OPER)                                     *
+      *        QUOTE                                                   *
+      *        LABEL(YES)                                              *
+      *        DBCSDELIM(NO)                                           *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE API0.BAC_OPER TABLE
+           ( NUMOPE                         SMALLINT NOT NULL,
+             NUMCPT                         SMALLINT NOT NULL,
+             APPEME                         CHAR(3),
+             TEXTE0                         CHAR(80) NOT NULL,
+             MTTOPE                         DECIMAL(11, 2),
+             MTTCOM                         DECIMAL(11, 2),
+             DATOPE                         DATE NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE API0.BAC_OPER                      *
+      ******************************************************************
+       01  BAC-OPER.
+      *    *************************************************************
+      *                       NUMOPE
+           10 NO1                  PIC S9(4) USAGE COMP.
+      *    *************************************************************
+      *                       NUMCPT
+           10 NO2                  PIC S9(4) USAGE COMP.
+      *    *************************************************************
+      *                       APPEME
+           10 NO3                  PIC X(3).
+      *    *************************************************************
+      *                       TEXTE0
+           10 NO4                  PIC X(80).
+      *    *************************************************************
+      *                       MTTOPE
+           10 NO5                  PIC S9(9)V9(2) USAGE COMP-3.
+      *    *************************************************************
+      *                       MTTCOM
+           10 NO6                  PIC S9(9)V9(2) USAGE COMP-3.
+      *    *************************************************************
+      *                       DATOPE
+           10 NO7                  PIC X(10).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 7       *
+      ******************************************************************
+
+
+
+
+
+      ******************************************************************
+      * DCLGEN TABLE(API0.BAC_STATUT)                                  *
+      *        LIBRARY(API0.SOURCE.DCLGEN3(BSTATUT))                   *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(NO)                                               *
+      *        STRUCTURE(BAC-STATUT)                                   *
+      *        QUOTE                                                   *
+      *        LABEL(YES)                                              *
+      *        DBCSDELIM(NO)                                           *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE API0.BAC_STATUT TABLE
+           ( STATUT                         CHAR(1) NOT NULL,
+             LIBSTA                         CHAR(15) NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE API0.BAC_STATUT                    *
+      ******************************************************************
+       01  BAC-STATUT.
+      *    *************************************************************
+      *                       STATUT
+           10 NO1                  PIC X(1).
+      *    *************************************************************
+      *                       LIBSTA
+           10 NO2                  PIC X(15).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 2       *
+      ******************************************************************

@@ -1,0 +1,520 @@
+#***********************************************************************************************************************#
+#  ÉNONCÉ : Mettre à jour le fichier KSDS API3.KSDS.ASSURES à partir du fichier séquentiel API0.MVT.ASSURES via un      #
+#           accesseur multifonctions ACCESS3. Le fichier séquentiel contient toutes les informations des assurés à      #
+#           mettre à jour das le fichier KSDS (création, modification ou suppression un ou plusieurs assurés).          #
+#***********************************************************************************************************************#
+
+Fichier KSDS : API3.KSDS.ASSURES
+- Fichier d'enregistrements de longueur fixe de 80 caractères.
+- Clé primaire = matricule de l'assuré
+- Clé secondaire (via un index secondaire) = nom et prénom
+
+Programme principal PROJ3 : Lecture du fichier séquentiel API0.MVT.ASSURES.
+Chaque enregistrement représente un mouvement de mise à jour (création, modification ou suppression) dont les informations sont
+à reporter dans le fichier KSDS API3.KSDS.ASSURES. Le programme n'accède pas au KSDS, il passe par l'accesseur dédié pour réaliser
+l'action nécessaire. En fin de mise à jour, le programme affiche les informations de chaque assuré du KSDS (demande de lecture
+séquentielle à l'accesseur).
+
+Accesseur ACCESS3 : Il contient les ordres de lecture et de mise à jour d'un assuré dans le KSDS : lecture ; création ; modification ;
+suppression ; ainsi que la lecture séquentielle du fichier.
+
+Règles de contrôle et de mise à jour des informations : PROJ3 contrôle chaque variable du mouvement, en déduit l'action à réaliser,
+effectue les contrôles sur ce mouvement en fonction de l'action et si le mouvement ne contient aucune erreur, appelle ACCESS3 pour
+la mise à jour de l'assuré dans le KSDS.
+
+Contrôles :
+– Le matricule est obligatoire et doit être numérique sinon erreur 1
+– le nom prénom est facultatif, sa présence ou absence détermine l'action à réaliser
+– les autres zones sont facultatives, contrôler le format numérique pour les zones numériques
+
+Déduction de l'action à effectuer :
+– Créer l'assuré : Si le matricule, et nom/prénom sont renseignés et qu'il n'existe pas dans le KSDS
+– Modifier l'assuré : i le matricule, et nom/prénom sont renseignés et qu'il existe dans le KSDS
+NB : ne pas faire la mise à jour si pas de changement entre les zones du mouvement et celles de l'assuré dans le KSDS
+– Supprimer l'assuré : Si le matricule est renseigné mais que le nom/prénom ne l'ai pas et qu'il existe dans le KSDS
+
+PROGRAMME PRINCIPAL : PROJ3 - ACCESSEUR : ACCESS3
+
+PROGRAMME PROJ3 :
+   CBL DYNAM
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PROJ3.
+      ******************************************************************
+      * BUT : MISE A JOUR DU FIICHIER KSDS DES ASSURES                 *
+      *       PAR APPEL D'UN ACCESSEUR                                 *
+      ******************************************************************
+       AUTHOR. GIUSEPPE.
+       DATE-WRITTEN. 26/05/23.
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+      * DECLARATION DU FICHIER MVT POUR MAJ KSDS ASSURES
+       FILE-CONTROL.
+           SELECT MVT ASSIGN TO MVT
+           ORGANIZATION IS SEQUENTIAL
+           ACCESS MODE  IS SEQUENTIAL
+           FILE STATUS  IS FS-MVT.
+       DATA DIVISION.
+       FILE SECTION.
+       FD  MVT
+           RECORDING MODE IS F.
+      * DECLARATION DU BUFFER DU FICHIER MVT
+       01  B-ENR-MVT    PIC X(80).
+       WORKING-STORAGE SECTION.
+      * DESCRIPTION DE L'ENREGISTREMENT
+       01  WS-ENR-MVT.
+           05 WS-MATRICULE        PIC 9(6).
+           05 WS-NOM-PRENOM       PIC X(20).
+           05 WS-RUE-ADRESSE      PIC X(18).
+           05 WS-CODE-POSTAL      PIC 9(5).
+           05 WS-VILLE            PIC X(12).
+           05 WS-TYPE-VEHICULE    PIC X(1).
+           05 WS-PRIME            PIC 9(4)V99.
+           05 WS-BONUS-MALUS      PIC X(1).
+           05 WS-TAUX             PIC 9(2).
+           05                     PIC X(9).
+
+      * FILE STATUS
+       01  FS-MVT                 PIC 99   VALUE ZEROES.
+
+      * ZONE DE COMMUNICATION AVEC ACCESSEUR
+       01  ZASSURE.
+           05 ZCODE-FONC          PIC X.
+               88 OUVERTURE                VALUE 'O'.
+               88 LECTURE                  VALUE 'L'.
+               88 CREATION                 VALUE 'C'.
+               88 MODIFICATION             VALUE 'M'.
+               88 SUPPRESSION              VALUE 'S'.
+               88 POSITIONNEMENT           VALUE 'T'.
+               88 LECTURE-SEQ              VALUE 'Q'.
+               88 FERMETURE                VALUE 'F'.
+           05 ZMATRICULE          PIC 9(6).
+           05 ZNOM-PRENOM         PIC X(20).
+           05 ZRUE-ADRESSE        PIC X(18).
+           05 ZCODE-POSTAL        PIC 9(5).
+           05 ZVILLE              PIC X(12).
+           05 ZTYPE-VEHICULE      PIC X(1).
+           05 ZPRIME              PIC 9(4)V99.
+           05 ZBONUS-MALUS        PIC X(1).
+           05 ZTAUX               PIC 9(2).
+           05 ZCODE-RET           PIC 9(2).
+           05 ZLIBERR             PIC X(50).
+
+       01 ACCESS3                 PIC X(8) VALUE 'ACCESS3'.
+
+      * TABLE DES ERREURS
+       01  TABERR.
+           05                     PIC X(50) VALUE
+           'MATRICULE INVALIDE'.
+           05                     PIC X(50) VALUE
+           'MATRICULE INEXISTANT'.
+           05                     PIC X(50) VALUE
+           'FIN DE LISTE'.
+           05                     PIC X(50) VALUE
+           'PROBLEME SUR FICHIER KSDS'.
+       01  REDEFINES TABERR.
+           05 POSTERR             PIC X(50) OCCURS 4.
+
+      * INDICE DE BALAYAGE
+       01  I                      PIC 99 VALUE ZEROES.
+
+      * COMPTEURS
+       01  CPT-LUS                PIC 99 VALUE ZEROES.
+       01  CPT-CRE                PIC 99 VALUE ZEROES.
+       01  CPT-MOD                PIC 99 VALUE ZEROES.
+       01  CPT-SUP                PIC 99 VALUE ZEROES.
+
+      * INDICATEUR DE FIN DE FICHIER MVT
+       01                         PIC X  VALUE SPACES.
+           88 FIN-MVT                    VALUE 'Y'.
+
+      * INDICATEUR D'ERREUR
+       01                         PIC X  VALUE SPACES.
+           88 OK                         VALUE '0'.
+           88 ERREUR                     VALUE 'Y'.
+
+      * INDICATEUR DE PRESENCE DU NOM PRENOM
+       01                         PIC X  VALUE SPACES.
+           88 NOM-PRENOM-PRESENT         VALUE '0'.
+           88 NOM-PRENOM-ABSENT          VALUE 'Y'.
+
+      * INDICATEUR D'EXISTENCE DE L'ASSURE DANS LE KSDS
+       01                         PIC X  VALUE SPACES.
+           88 ASSURE-TROUVE              VALUE '0'.
+           88 ASSURE-NON-TROUVE          VALUE 'N'.
+
+       PROCEDURE DIVISION.
+           PERFORM DEBUT
+           PERFORM UNTIL FIN-MVT
+              PERFORM TRT-MVT
+              PERFORM READ-MVT
+           END-PERFORM
+           PERFORM FIN
+           .
+
+       DEBUT.
+      * OUVERTURE DU FICHIER MVT
+           OPEN INPUT MVT
+           IF FS-MVT NOT = ZEROES
+               DISPLAY 'ERREUR OPEN MVT, FS : ' FS-MVT
+               PERFORM FIN
+           END-IF
+
+      * LECTURE DU 1ER ENREGISTREMENT
+           PERFORM READ-MVT
+           IF FIN-MVT
+              DISPLAY 'ERREUR FICHIER MVT VIDE !!!!'
+              PERFORM FIN
+           END-IF
+
+      * OUVERTURE DU KSDS
+           INITIALIZE ZASSURE
+           MOVE 'O'          TO ZCODE-FONC
+           CALL ACCESS3 USING ZASSURE
+           IF ZCODE-RET NOT = ZEROES
+              PERFORM FIN
+           END-IF
+           .     
+
+       TRT-MVT.
+           SET OK TO TRUE
+
+           PERFORM CTRL-MATRICULE
+           IF OK
+              PERFORM CTRL-NOM-PRENOM
+              PERFORM LECTURE-ASSURE
+
+      * DEDUCTION DE L'ACTION A TRAITER
+              EVALUATE TRUE           ALSO TRUE
+      * CREATION D'UN ASSURE
+               WHEN ASSURE-NON-TROUVE ALSO NOM-PRENOM-PRESENT
+                   PERFORM TRT-CREATION
+      * MODIFICATION D'UN ASSURE
+               WHEN ASSURE-TROUVE     ALSO NOM-PRENOM-PRESENT
+                   PERFORM TRT-MODIFICATION
+      * SUPPRESSION D'UN ASSURE
+               WHEN ASSURE-TROUVE     ALSO NOM-PRENOM-ABSENT
+                   PERFORM TRT-SUPPRESSION
+              END-EVALUATE
+           END-IF
+           .
+
+       CTRL-MATRICULE.
+      * CONTROLE DU MATRICULE
+           IF WS-MATRICULE NOT NUMERIC
+           OR WS-MATRICULE = ZEROES
+              DISPLAY POSTERR(1)
+              SET ERREUR TO TRUE
+           END-IF
+           .   
+
+       CTRL-NOM-PRENOM.
+      * INDICATEUR DE PRESENCE DU NOM PRENOM
+           IF WS-NOM-PRENOM = SPACES
+              SET NOM-PRENOM-ABSENT TO TRUE
+           ELSE
+              SET NOM-PRENOM-PRESENT TO TRUE
+           END-IF
+           .
+
+       LECTURE-ASSURE.
+      * LECTURE DE L'ASSURE
+           INITIALIZE ZASSURE
+           MOVE 'L'          TO ZCODE-FONC
+           MOVE WS-MATRICULE TO ZMATRICULE
+           CALL ACCESS3 USING ZASSURE
+           EVALUATE ZCODE-RET
+             WHEN ZEROES
+                  SET ASSURE-TROUVE TO TRUE
+             WHEN 2
+                  SET ASSURE-NON-TROUVE TO TRUE
+             WHEN OTHER
+                  DISPLAY 'ERREUR CALL ACCESS3 POUR LECTURE'
+                  PERFORM FIN
+           END-EVALUATE
+           .
+
+       TRT-CREATION.
+           DISPLAY 'TRT CREATION'
+           INITIALIZE ZASSURE
+           MOVE 'C' TO ZCODE-FONC
+           MOVE WS-MATRICULE      TO ZMATRICULE
+           MOVE WS-NOM-PRENOM     TO ZNOM-PRENOM
+           MOVE WS-RUE-ADRESSE    TO ZRUE-ADRESSE
+           MOVE WS-CODE-POSTAL    TO ZCODE-POSTAL
+           MOVE WS-VILLE          TO ZVILLE
+           MOVE WS-TYPE-VEHICULE  TO ZTYPE-VEHICULE
+           MOVE WS-PRIME          TO ZPRIME
+           MOVE WS-BONUS-MALUS    TO ZBONUS-MALUS
+           MOVE WS-TAUX           TO ZTAUX
+
+           CALL ACCESS3 USING ZASSURE
+           MOVE ZEROES TO ZCODE-RET
+           IF ZCODE-RET NOT = ZEROES
+              DISPLAY 'ERREUR CALL ACCESS3 POUR CREATION'
+              PERFORM FIN
+           ELSE
+              DISPLAY 'CREATION BIEN EFFECTUEE'
+              ADD 1 TO CPT-CRE
+           END-IF
+           .
+
+       TRT-MODIFICATION.
+           DISPLAY 'TRT MODIFICATION'
+           DISPLAY ' ----------> PAS ENCORE DEVELOPPE'
+           .
+
+       TRT-SUPPRESSION.
+           DISPLAY 'TRT SUPPRESSION'
+           DISPLAY ' ----------> PAS ENCORE DEVELOPPE'
+           .
+
+       READ-MVT.
+           READ MVT INTO WS-ENR-MVT
+               AT END     SET FIN-MVT TO TRUE
+               NOT AT END ADD 1 TO CPT-LUS
+                     DISPLAY SPACES
+                     DISPLAY 'ENR ' CPT-LUS ' : ' WS-ENR-MVT
+           END-READ
+           IF NOT (FS-MVT = ZEROES OR 10)
+               DISPLAY 'ERREUR READ MVT, FS : ' FS-MVT
+               PERFORM FIN
+           END-IF
+           .
+
+       FIN.
+           CLOSE MVT
+
+      * FERMETURE DU KSDS
+           INITIALIZE ZASSURE
+           MOVE 'F'          TO ZCODE-FONC
+           CALL ACCESS3 USING ZASSURE
+           DISPLAY 'CPT LUS : ' CPT-LUS
+           DISPLAY 'CPT CRE : ' CPT-CRE
+           DISPLAY 'CPT MOD : ' CPT-MOD
+           DISPLAY 'CPT SUP : ' CPT-SUP
+           STOP RUN
+           .
+
+
+ACCESSEUR : ACCESS3
+
+      IDENTIFICATION DIVISION.
+       PROGRAM-ID. ACCESS3.
+      ******************************************************************
+      * BUT : ACCESSEUR FICHIER KSDS DES ASSURES                       *
+      ******************************************************************
+       AUTHOR. GIUSEPPE.
+       DATE-WRITTEN. 26/05/23.
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+      * DECLARATION DU FICHIER KSDS ASSURES
+       FILE-CONTROL.
+           SELECT ASSURES ASSIGN TO ASSURES
+           ORGANIZATION IS INDEXED
+           ACCESS MODE  IS DYNAMIC
+           RECORD KEY   IS B-MATRICULE
+           FILE STATUS  IS FS-ASSURES.
+       DATA DIVISION.
+       FILE SECTION.
+       FD  ASSURES.
+      * DECLARATION DU BUFFER DU FICHIER ASSURES
+       01  B-ENR-ASSURES.
+           05 B-MATRICULE PIC 9(6).
+           05             PIC X(74).
+
+       WORKING-STORAGE SECTION.
+      * DESCRIPTION DE L'ENREGISTREMENT
+       01  WS-ASSURE.
+           05 WS-MATRICULE        PIC 9(6).
+           05 WS-NOM-PRENOM       PIC X(20).
+           05 WS-RUE-ADRESSE      PIC X(18).
+           05 WS-CODE-POSTAL      PIC 9(5).
+           05 WS-VILLE            PIC X(12).
+           05 WS-TYPE-VEHICULE    PIC X(1).
+           05 WS-PRIME            PIC 9(4)V99.
+           05 WS-BONUS-MALUS      PIC X(1).
+           05 WS-TAUX             PIC 9(2).
+           05                     PIC X(9).
+   
+      * FILE STATUS
+       01  FS-ASSURES              PIC 99   VALUE ZEROES.
+
+      * TABLE DES ERREURS
+       01  TABERR.
+           05                     PIC X(50) VALUE
+           'MATRICULE INVALIDE'.
+           05                     PIC X(50) VALUE
+           'MATRICULE INEXISTANT'.
+           05                     PIC X(50) VALUE
+           'FIN DE LISTE'.
+           05                     PIC X(50) VALUE
+           'PROBLEME SUR FICHIER KSDS'.
+       01  REDEFINES TABERR.
+           05 POSTERR             PIC X(50) OCCURS 4.
+
+      * INDICE DE BALAYAGE
+       01  I                      PIC 99 VALUE ZEROES.
+
+
+       LINKAGE SECTION.
+      * ZONE DE COMMUNICATION AVEC ACCESSEUR
+       01  ZASSURE.
+           05 ZCODE-FONC          PIC X.
+               88 OUVERTURE                VALUE 'O'.
+               88 LECTURE                  VALUE 'L'.
+               88 CREATION                 VALUE 'C'.
+               88 MODIFICATION             VALUE 'M'.
+               88 SUPPRESSION              VALUE 'S'.
+               88 POSITIONNEMENT           VALUE 'T'.
+               88 LECTURE-SEQ              VALUE 'Q'.
+               88 FERMETURE                VALUE 'F'.
+           05 ZMATRICULE          PIC 9(6).
+           05 ZNOM-PRENOM         PIC X(20).
+           05 ZRUE-ADRESSE        PIC X(18).
+           05 ZCODE-POSTAL        PIC 9(5).
+           05 ZVILLE              PIC X(12).
+           05 ZTYPE-VEHICULE      PIC X(1).
+           05 ZPRIME              PIC 9(4)V99.
+           05 ZBONUS-MALUS        PIC X(1).
+           05 ZTAUX               PIC 9(2).
+           05 ZCODE-RET           PIC 9(2).
+           05 ZLIBERR             PIC X(50).
+
+
+       PROCEDURE DIVISION USING ZASSURE.
+      * INITIALISATION
+           MOVE ZERO   TO ZCODE-RET
+           MOVE SPACES TO ZLIBERR
+
+      * AIGUILLAGE SELON LE CODE FONCTION
+           EVALUATE ZCODE-FONC
+               WHEN 'O'
+                   PERFORM OPEN-ASSURES
+               WHEN 'L'
+                   PERFORM READ-ASSURES
+               WHEN 'C'
+                   PERFORM WRITE-ASSURES
+               WHEN 'F'
+                   PERFORM CLOSE-ASSURES
+           END-EVALUATE
+           PERFORM FIN
+           .
+
+       OPEN-ASSURES.
+           OPEN I-O ASSURES
+           IF NOT (FS-ASSURES = ZEROES)
+              DISPLAY 'ERREUR OPEN ASSURES KSDS, FS : ' FS-ASSURES
+              PERFORM FIN-ERREUR-GRAVE
+           END-IF
+           .
+       
+       CLOSE-ASSURES.
+           CLOSE ASSURES
+           .
+
+       READ-ASSURES.
+            MOVE ZMATRICULE TO B-MATRICULE
+            READ ASSURES INTO WS-ASSURE
+               INVALID KEY
+                   MOVE 2      TO ZCODE-RET
+               NOT INVALID KEY
+                   MOVE ZEROES TO ZCODE-RET
+            END-READ
+            IF NOT (FS-ASSURES = ZEROES OR 23)
+               DISPLAY 'ERREUR READ ASSURES KSDS, FS : ' FS-ASSURES
+               PERFORM FIN-ERREUR-GRAVE
+            END-IF
+            .
+
+      
+       WRITE-ASSURES.
+      * ALIMENTATYION DES ZONES DE WORKING A PARTIR DE LA ZONE DE COMM
+      * MISE A ZERO DES VARIABLES NUMERIQUES SI ELLES NE SONT PAS NUM
+            MOVE ZMATRICULE       TO WS-MATRICULE
+            MOVE ZNOM-PRENOM      TO WS-NOM-PRENOM
+            MOVE ZRUE-ADRESSE     TO WS-RUE-ADRESSE
+
+            IF ZCODE-POSTAL NOT NUMERIC
+               MOVE ZEROES        TO WS-CODE-POSTAL
+            ELSE
+               MOVE ZCODE-POSTAL  TO WS-CODE-POSTAL
+            END-IF
+
+            MOVE ZVILLE            TO WS-VILLE
+            MOVE ZTYPE-VEHICULE    TO WS-TYPE-VEHICULE
+
+            IF ZPRIME NOT NUMERIC
+               MOVE ZEROES         TO WS-PRIME
+            ELSE
+               MOVE ZPRIME         TO WS-PRIME
+            END-IF
+
+            MOVE ZBONUS-MALUS      TO WS-BONUS-MALUS
+
+            IF ZTAUX  NOT NUMERIC
+               MOVE ZEROES         TO WS-TAUX
+            ELSE
+               MOVE ZTAUX          TO WS-TAUX
+            END-IF
+
+      * ECRITURE A PARTIR DE LA ZONE DE WORKING
+           WRITE B-ENR-ASSURES FROM WS-ASSURE
+               NOT INVALID KEY
+                MOVE ZEROES TO ZCODE-RET
+           END-WRITE
+
+           IF NOT (FS-ASSURES = ZEROES)
+              DISPLAY 'ERREUR WRITE ASSURES KSDS, FS : ' FS-ASSURES
+              PERFORM FIN-ERREUR-GRAVE
+           END-IF
+           .
+      
+       FIN-ERREUR-GRAVE.
+           MOVE 99 TO ZCODE-RET
+           MOVE POSTERR(4) TO ZLIBERR
+           PERFORM FIN
+           .
+
+       FIN.
+            GOBACK.
+
+
+JCL :
+//API8P3 JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H,TIME=(,5),COND=(4,LT)
+//*
+//* BIBLIOTHEQUE DES LOAD MODULES
+//JOBLIB   DD DSN=API8.COBOL.LOAD,DISP=SHR
+//         DD DSN=CEE.SCEERUN,DISP=SHR
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API8.SOURCE.PROJET(ACCESS3)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//LKED.SYSLMOD DD   DSN=API8.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME ACCESS3(R)
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API8.SOURCE.PROJET(PROJ3)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//LKED.SYSLMOD DD   DSN=API8.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME PROJ3(R)
+//*
+//* EXECUTION DU PROGRAMME
+//STEP2        EXEC PGM=PROJ3
+//MVT          DD   DSN=API0.MVT.ASSURES,DISP=SHR
+//ASSURES      DD   DSN=API8.KSDS.ASSURES,DISP=SHR
+//SYSOUT       DD   SYSOUT=*
+//
+
+
+
+
+
+

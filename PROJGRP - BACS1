@@ -1,0 +1,169 @@
+  CBL DYNAM
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.   BACS1.
+       AUTHOR.       TEAMHDS.
+       DATE-WRITTEN. 31/05/2023.
+      ******************************************************************
+      *                                                                *
+      * FONCTION : TRANSMISSIONS DES INFORMATIONS CONCERNANT LE CLIENT *
+      *            ET LE COMPTE A DEBITER A L'APPLICATION VIR          *
+      *                                                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+       DATA DIVISION.
+       FILE SECTION.
+       WORKING-STORAGE SECTION.
+      * DECLARATION DE LA TABLE BAC_CLIENT
+           EXEC SQL INCLUDE BCLIENT END-EXEC.
+      * DECLARATION DE LA TABLE BAC_STATUT
+           EXEC SQL INCLUDE BSTATUT END-EXEC.
+      * DECLARATION DE LA TABLE BAC_CPTCLI
+           EXEC SQL INCLUDE BCPTCLI END-EXEC.
+      * DECLARATION DE LA TABLE BAC_COMPTE
+           EXEC SQL INCLUDE BCOMPTE END-EXEC.
+      * DECLARATION DE LA TABLE BAC_OPER
+           EXEC SQL INCLUDE BOPER   END-EXEC.
+
+      * DECLARATION SQLCA
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+
+      * HOST VARIABLES DE LA TABLE CLIENT
+       01 HVCLI-CLIENT.
+          05 HVCLI-NUMCLI       PIC S9(4) USAGE COMP.
+          05 HVCLI-STATUT       PIC X.
+          05 HVCLI-TYPCLI       PIC X.
+          05 HVCLI-NOM000       PIC X(15).
+          05 HVCLI-PRENOM       PIC X(15).
+          05 HVCLI-VILLE0       PIC X(15).
+          05 HVCLI-CDPOST       PIC S9(5)V USAGE COMP-3.
+          05 HVCLI-DATENT       PIC X(10).
+          05 HVCLI-DATMAJ       PIC X(10).
+
+       01 CDPOSTED              PIC 9(5).
+
+      * HOST VARIABLES DE LA TABLE COMPTE
+       01 HVCOM-COMPTE.
+          05 HVCOM-NUMCPT       PIC S9(4) USAGE COMP.
+          05 HVCOM-STATUT       PIC X.
+          05 HVCOM-SOLDE0       PIC S9(9)V99 USAGE COMP-3.
+          05 HVCOM-DATOUV       PIC X(10).
+          05 HVCOM-DATMAJ       PIC X(10).
+
+       01 WS-NUMCLID          PIC S9(4) COMP.
+       01 WS-NUMCPTD          PIC S9(4) COMP.
+       01 WS-MTTRAN           PIC S9(9)V99.
+       01 WS-SOLDE0           PIC S9(9)V9(9).
+
+       LINKAGE SECTION.
+      * ZONE DE COMMUNICATION AVEC L'APPLI VIR
+       01 ZCOM.
+          05 ZNUMCLID           PIC 99.
+          05 ZNUMCPTD           PIC 99.
+          05 ZMTTRAN            PIC S9(9)V9(9).
+          05 ZNOMCLID           PIC X(20).
+          05 ZSTATUTCLID        PIC X.
+          05 ZSTATUTCPTD        PIC X.
+          05 ZSTATUTSOLDE       PIC XX.
+
+      ******************************************************************
+      *                                                                *
+      *             P R O C E D U R E    D I V I S I O N               *
+      *                                                                *
+      ******************************************************************
+       PROCEDURE DIVISION USING ZCOM.
+
+      ******************************************************************
+      *                                                                *
+      *  TRAITEMENT PRINCIPAL : L.96   RECUPERATION DU NOM DU CLIENT   *
+      *                         L.134  VERIFICATION DU MONTANT         *
+      *                                                                *
+      ******************************************************************
+           PERFORM RECUP-NOM-CLIENT
+           PERFORM VERIF-MONTANT
+           PERFORM FIN.
+
+      * RECUPERATION DU NOM DU CLIENT
+       RECUP-NOM-CLIENT.
+           MOVE ZNUMCLID TO WS-NUMCLID
+           MOVE ZNUMCPTD TO WS-NUMCPTD
+           EXEC SQL
+               SELECT NOM000,STATUT
+               INTO  :HVCLI-NOM000, :HVCLI-STATUT
+               FROM API0.BAC_CLIENT
+               WHERE NUMCLI = :WS-NUMCLID
+            END-EXEC
+            PERFORM TEST-SQLCODE
+
+            IF HVCLI-STATUT = 'C'
+                MOVE HVCLI-STATUT TO  ZSTATUTCLID
+            ELSE
+                MOVE 'Z' TO  ZSTATUTCLID
+            END-IF.
+
+
+      *    RECUPERATION DU STATUT DANS BAC_COMPTE
+           EXEC SQL
+               SELECT STATUT
+               INTO  :HVCOM-STATUT
+               FROM API0.BAC_COMPTE
+               WHERE NUMCPT = :WS-NUMCPTD
+            END-EXEC
+            PERFORM TEST-SQLCODE
+
+            IF HVCOM-STATUT = 'O'
+                MOVE HVCOM-STATUT TO  ZSTATUTCPTD
+            ELSE
+                MOVE 'Z' TO  ZSTATUTCPTD
+            END-IF
+
+            IF (ZSTATUTCPTD = 'O') AND (ZSTATUTCLID = 'C')
+                MOVE  HVCLI-NOM000 TO ZNOMCLID
+            END-IF.
+
+      * VERIFICATION SI LE VIREMENT EST POSSIBLE
+       VERIF-MONTANT.
+           MOVE ZNUMCPTD TO WS-NUMCPTD
+           EXEC SQL
+               SELECT SOLDE0
+               INTO :HVCOM-SOLDE0
+               FROM API0.BAC_COMPTE
+               WHERE NUMCPT = :WS-NUMCPTD
+           END-EXEC
+            PERFORM TEST-SQLCODE
+
+           MOVE HVCOM-SOLDE0 TO WS-SOLDE0
+           DISPLAY WS-SOLDE0
+           IF WS-SOLDE0 > ZMTTRAN
+               MOVE 'OK' TO ZSTATUTSOLDE
+               DISPLAY 'TRANS OK' ZMTTRAN ' ' WS-SOLDE0
+           ELSE
+               MOVE 'KO' TO ZSTATUTSOLDE
+               DISPLAY 'KOOOOOOO' ZMTTRAN ' ' WS-SOLDE0
+           END-IF.
+
+      ******************************************************************
+      *                     TEST DU SQLCODE                            *
+      ******************************************************************
+       TEST-SQLCODE.
+           EVALUATE TRUE
+            WHEN SQLCODE = ZEROES
+                DISPLAY 'REQUETE OK ' SQLCODE
+            WHEN SQLCODE = +100
+              DISPLAY ' INCONNU EN TABLE' SQLCODE
+            WHEN OTHER
+              DISPLAY 'ERREUR SQLCODE : ' SQLCODE
+           END-EVALUATE.
+
+      ******************************************************************
+      *                     ETIQUETTE DE FIN                           *
+      ******************************************************************
+       FIN.
+           GOBACK.
+      *                                                 ////
+      *                                                (OO)
+      *                                          -OOO--(__)--OOO-

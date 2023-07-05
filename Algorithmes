@@ -1,0 +1,730 @@
+#Les exercices ci-dessous proviennent du site internet suivant : http://cours.pise.info/algo/introduction.htm
+
+#Récapitulatif des algorithmes ci-dessous :
+
+| EXERCICE |                         DESCRIPTION                      |   LIGNE  | JEU DE TEST |
+|----------|----------------------------------------------------------|----------|-------------|
+|    1.6   | Échange de valeurs entre deux variables                  |          |      /      |
+|    1.7   | Transfère de valeurs entre trois variables               |          |      /      |
+|    2.2   | Calcul du carré d'un nombre                              |          |      /      |
+|    2.3   | Affichage de salutation & du nom d'une personne          |          |      /      |
+|    2.4   | Calcul du prix TTC                                       |          |      /      |
+|    3.2   | Calcul du produit et affichage du signe du nombre        |          |      /      |
+|    3.3   | Ordre alphabétique de noms                               |          |      /      |
+|    3.4   | Informe du signe du nombre                               |          |      /      |
+|    3.5   | Informe du signe du produit de deux nombres              |          |      /      |
+|    3.6   | Catégories d'âges                                        |          |     OUI     |
+|    4.1   | Conditions                                               |          |     OUI     |
+|    4.3   | Affichage de l'heure une minute/seconde plus tard        |          |     OUI     |
+|    4.4   | Calcul de la facturation de photocopies                  |          |     OUI     |
+|    4.5   | Calcul des impôts en fonction de règles basiques         |          |     OUI     |
+|    4.5   | Résultat d'éléctions                                     |          |     OUI     |
+|    4.8   | Date valide                                              |          |     OUI     |
+|  5.3;5.4 | Affichage des dix nombres suivants                       |          |     OUI     |
+|    5.5   | Table de multiplication d'un nombre                      |          |      /      |
+|    5.6   | Somme des entiers d'un nombre                            |          |      /      |
+|    5.7   | Calcul de la factorielle d'un nombre                     |          |      /      |
+|    5.10  | Calcul de la monnaie dû lors d'un achat                  |          |     OUI     |
+|    6.1   | Remplissage d'un tableau                                 |          |      /      |
+|    6.8   | Calcul nombre de valeurs positives et négatives entrées  |          |      /      |
+|    6.10  | Création tableau provenant de la somme de deux éléments  |          |      /      |
+|    6.11  | Multiplication d'éléments de tableau                     |          |     OUI     |
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+#Exercice 1.6 : Écrire un algorithme permettant d’échanger les valeurs de deux variables A et B, et ce quel que soit leur contenu préalable.
+#Exemple : A vaut 1, B vaut 2. En fin de traitement, A doit valoir 2 et B doit valoir 1
+
+Solution n°1 :
+A entier
+B entier
+C entier
+Début
+A ← 1
+B ← 2
+C ← B
+B ← A
+A ← C
+Fin
+
+Solution n°2 :
+Début
+A ← A + B
+B ← A – B
+A ← A – B
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 1.7 : Écrire un algorithme transférant à B la valeur de A, à C la valeur de B et à A la valeur de C
+#(toujours quels que soient les contenus préalables de ces variables).
+
+Solution n°1 :
+A     entier
+B     entier
+C     entier
+D     entier
+Début
+A ← 1
+B ← 2
+C ← 3
+D ← A
+A ← C
+C ← B
+B ← D
+A = 3, B =1, C = 2
+Fin
+
+Solution n°2 :
+Début
+C ← A + B + C
+A ← C – (B + A)
+B ← C – (B + A)
+C ← C – (B + A)
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 2.2 : Écrire un programme qui demande un nombre à l’utilisateur, puis qui calcule et affiche le carré de ce nombre.
+NBRE     entier
+CARRE    entier
+Début
+Écrire « entrer un nombre : »
+Lire NBRE
+CARRE ← NBRE * NBRE
+Écrire « son carré est : » CARRE
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 2.3 : Écrire un programme qui demande son prénom à l'utilisateur, et qui lui réponde par un charmant « Bonjour » suivi du prénom
+PRENOM   alphanumérique
+Début
+Écrire « quel est ton prénom : »
+Lire PRENOM
+Écrire « Bonjour, » PRENOM « ! »
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 2.4 : Écrire un programme qui lit le prix HT d’un article, le nombre d’articles et le taux de TVA, et qui fournit le prix
+#total TTC correspondant. Faire en sorte que des libellés apparaissent clairement.
+NOMBRE           entier
+PRIX-HT          numérique
+TAUX-TVA         numérique
+PRIX-TOTAL-TTC   numérique
+Début
+Écrire « Entrer le prix HT : »
+Lire PRIX-HT
+Écrire « Entrer le nombre d'articles : »
+Lire NOMBRE
+Écrire « Entrer le taux de TVA (en pourcentage) : »
+Lire TAUX-TVA
+PRIX-TTC ← NOMBRE * PRIX-HT * (1 + TAUX-TVA / 100)
+Écrire « Prix total TTC : » PRIX-TOTAL-TTC
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 3.2 : Écrire un algorithme qui demande deux nombres à l’utilisateur et l’informe ensuite si leur produit est négatif ou
+#positif (on laisse de côté le cas où le produit est nul). Attention toutefois : on ne doit pas calculer le produit des deux nombres.
+N1     entier signé
+N2     entier signé
+Début
+Écrire « Entrer un premier nombre : »
+Lire N1
+Écrire « Entrer un second nombre : »
+Lire N2
+Si (N1>0etN2>0)ou(N1<0etN2<0)
+  écrire « le produit est positif »
+sinon
+  écrire « le produit est négatif »
+finsi
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 3.3 : Écrire un algorithme qui demande trois noms à l’utilisateur et l’informe ensuite s’ils sont rangés ou non dans
+#l’ordre alphabétique.
+NOM1   alphabétique
+NOM2   alphabétique
+NOM3   alphabétique
+Début
+Écrire « Saisir un premier nom : »
+Lire NOM1
+Écrire « Saisir un second nom : »
+Lire NOM2
+Écrire « Saisir un troisième nom : »
+Lire NOM3
+Si NOM1 < NOM2 et NOM2 < NOM3
+  écrire « ordre alphabétique »
+sinon
+  écrire « ordre non alphabétique »
+finsi
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 3.4 : Écrire un algorithme qui demande un nombre à l’utilisateur, et l’informe ensuite si ce nombre est positif ou
+#négatif (on inclut cette fois le traitement du cas où le nombre vaut zéro).
+NBR     entier signé
+Début
+Écrire « Entrer un nombre : »
+Lire NBR
+Si NBR = 0
+  écrire « le nombre est nul »
+sinon
+  si NBR > 0
+    écrire « le nombre est positif »
+  sinon
+    écrire « le nombre est négatif »
+  finsi
+finsi
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 3.5 : Écrire un algorithme qui demande deux nombres à l’utilisateur et l’informe ensuite si le produit est négatif ou
+#positif (on inclut cette fois le traitement du cas où le produit peut être nul). Attention toutefois, on ne doit pas calculer
+#le produit !
+N1     entier signé
+N2     entier signé
+Début
+Écrire « Entrer un premier nombre : »
+Lire N1
+Écrire « Entrer un second nombre : »
+Lire N2
+Si N1 = 0 ou N2 = 0
+  écrire « le produit est nul »
+sinon
+  si (N1>0etN2>0)ou(N1<0etN2<0)
+    écrire « le produit est positif »
+  sinon
+    écrire « le produit est négatif »
+  finsi
+finsi
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 3.6 : Écrire un algorithme qui demande l’âge d’un enfant à l’utilisateur. Ensuite, il l’informe de sa catégorie :
+#"Poussin" de 6 à 7 ans ; "Pupille" de 8 à 9 ans ; "Minime" de 10 à 11 ans ; "Cadet" après 12 ans
+AGE     entier
+Début
+Écrire « Entrer l'âge : »
+Lire AGE
+A) si AGE >= 12
+      écrire « Cadet »
+   sinon
+B)    si AGE >= 10
+         écrire « minime »
+      sinon
+C)       si AGE >= 8
+            écrire « pupille »
+         sinon
+D)          si AGE >= 6
+               écrire « poussin »
+E)          sinon 
+               écrire "moins de 6 ans"
+            finsi
+         finsi
+      finsi
+   finsi
+Fin
+
+Jeu de test : Conditions testées par l'ordinateur selon l'âge
+AGE = 1  ; Condition = A,B,C,D,E
+AGE = 6  ; Condition = A,B,C,D
+AGE = 7  ; Condition = A,B,C,D
+AGE = 8  ; Condition = A,B,C
+AGE = 9  ; Condition = A,B,C
+AGE = 10 ; Condition = A,B
+AGE = 11 ; Condition = A,B
+AGE = 12 ; Condition = A
+AGE = 13 ; Condition = A
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 4.1 : Formulez un algorithme équivalent à l’algorithme suivant :
+Si Tutu > Toto + 4 OU Tata = "OK" Alors
+    Tutu ← Tutu + 1
+Sinon
+    Tutu ← Tutu – 1
+Finsi
+
+Début
+Si TUTU <= (TOTO + 4) et TATA <> « OK »
+    TUTU ← TUTU - 1
+sinon
+    TUTU ← TUTU + 1
+finsi
+Fin
+
+Jeu de test : Conditions testées par l'ordinateur selon les valeurs de TUTU, TOTO et TATA
+
+|                   |      A      |   B  |      |
+| Condition testée  | TUTU ; TOTO | TATA | TUTU |
+|-------------------|-------------|------|------|
+| A ou B            |   6  |   1  |  OK  |   7  |
+| A ou non B        |   6  |   1  |  KO  |   7  |
+| Non A ou B        |   4  |   1  |  OK  |   5  |
+| Non A ou non B    |   4  |   1  |  KO  |   3  |
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 4.3 : De même que le précédent, cet algorithme doit demander une heure et en afficher une autre. Mais cette fois,
+#il doit gérer également les secondes, et afficher l'heure qu'il sera une seconde plus tard.
+#NB : là encore, on suppose que l'utilisateur entre une date valide.
+
+HEURE entier
+MINUTE entier
+SECONDE entier
+Début
+Écrire « Entrer l'heure : »
+Lire HEURE
+Écrire « Entrer les minutes : »
+Lire MINUTE
+Écrire « Entrer les secondes : »
+Lire SECONDE
+SECONDE ← SECONDE + 1
+si SECONDE = 60
+    SECONDE ← 0
+    MINUTE ← MINUTE + 1
+finsi
+si MINUTE = 60
+    MINUTE ← 0
+    HEURE ← HEURE + 1
+finsi
+Si HEURE = 24
+    HEURE ← 0
+finsi
+Écrire « Dans une minute il sera » HEURE « h » MINUTE « mn » SECONDE « s »
+Fin
+
+Jeu de test :
+
+| HEURE(S) | MINUTE(S) | SECONDE(S) | HEURE(S) | MINUTE(S) | SECONDE(S) |
+|----------|-----------|------------|----------|-----------|------------|
+|    01    |     01    |     01     |    01    |     01    |     02     |
+|    01    |     01    |     59     |    01    |     02    |     00     |
+|    01    |     59    |     01     |    01    |     59    |     02     |
+|    01    |     59    |     59     |    02    |     00    |     00     |
+|    23    |     01    |     01     |    23    |     01    |     02     |
+|    23    |     01    |     59     |    23    |     02    |     00     |
+|    23    |     59    |     01     |    23    |     59    |     02     |
+|    23    |     59    |     59     |    00    |     00    |     00     |
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 4.4 : Un magasin de reprographie facture 0,10 E les dix premières photocopies, 0,09 E les vingt suivantes et 0,08 E au-delà.
+#Écrivez un algorithme qui demande à l’utilisateur le nombre de photocopies effectuées et qui affiche la facture correspondante.
+
+NBRE entier
+PRIX entier
+Début
+Écrire « Nombre de photocopies effectuées : »
+Lire NBRE
+si NBRE <= 10
+    PRIX ← NBRE * 0,10
+sinon
+    si NBRE <= 30
+        PRIX ← (10 * 0,10) + ((NBRE – 10) * 0,09)
+    sinon
+        PRIX ← (10 * 0,10) + (20 * 0,09) + ((NBRE – 30) * 0,08)
+    finsi
+finsi
+Écrire « le prix est : » PRIX
+Fin
+
+Jeu de test :
+
+|  NBRE  |  PRIX  |
+|--------|--------|
+|    4   |  0,40  |
+|   22   |  2,08  |
+|   40   |   3,6  |
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 4.5 : Les habitants de Zorglub paient l’impôt selon les règles suivantes :
+# • les hommes de plus de 20 ans paient l’impôt
+# • les femmes paient l’impôt si elles ont entre 18 et 35 ans
+# • les autres ne paient pas d’impôt
+#Le programme demandera donc l’âge et le sexe du Zorglubien, et se prononcera donc ensuite sur le fait que l’habitant est imposable.
+
+AGE entier
+SEXE alphanumérique
+Début
+Écrire « Homme ou Femme (H ou F) ? : »
+Lire SEXE
+Écrire « Age : »
+Lire AGE
+si (SEXE = 'H' et AGE > 20) ou (SEXE = 'F' et AGE > 17 et AGE < 36)
+    écrire « imposable »
+sinon
+    écrire « non imposable »
+finsi
+fin
+
+Jeu de test :
+
+|  SEXE  |  AGE  | IMPOSABLE ? |
+|--------|-------|-------------|
+|   H    |   20  |     NON     |
+|   H    |   21  |     OUI     |
+|   F    |   17  |     NON     |
+|   F    |   18  |     OUI     |
+|   F    |   36  |     NON     |
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 4.6 : Écriture d'un algorithme qui permet la saisie des scores de quatre candidats au premier tour des élections.
+#Il traitera ensuite le candidat numéro 1 (et uniquement lui) pour dire s'il est élu, battu, ballotage favorable ou défavorable
+#Règle suivante pour les élections :
+# • lorsque l'un des candidats obtient plus de 50% des suffrages, il est élu dès le premier tour.
+# • en cas de deuxième tour, peuvent participer uniquement les candidats ayant obtenu au moins 12,5% des voix au premier tour.
+
+SCORE1     entiers
+SCORE2     entiers
+SCORE3     entiers
+SCORE4     entiers
+Début
+Écrire « Score du candidat 1 (en pourcentage des suffrages) : »
+Lire SCORE1
+Écrire « Score du candidat 2 (en pourcentage des suffrages) : »
+Lire SCORE2
+Écrire « Score du candidat 3 (en pourcentage des suffrages) : »
+Lire SCORE3
+Écrire « Score du candidat 4 (en pourcentage des suffrages) : » lire SCORE4
+si SCORE1 > 50
+      écrire « candidat 1 élu »
+sinon
+      si SCORE1 < 12,5 ou SCORE2 > 50 ou SCORE3 > 50 ou SCORE4 > 50
+          écrire « candidat 1 éliminé »
+      sinon
+          si SCORE1 > SCORE2 et SCORE1 > SCORE3 et SCORE1 > SCORE4
+              écrire « candidat 1 en ballottage favorable »
+          sinon
+              écrire « candidat 1 en ballottage défavorable »
+          finsi
+      finsi
+finsi
+Fin
+
+Jeu de test :
+
+| SCORE1 | SCORE2 | SCORE3 | SCORE4 |                RESULTAT              |
+|--------|--------|--------|--------|--------------------------------------|
+|   51   |   10   |   10   |   29   | Candidat 1 élu                       |
+|   20   |   51   |   10   |   19   | Candidat 1 éliminé                   |
+|   20   |   20   |   20   |   40   | Candidat 1 en ballottage défavorable |
+|   40   |   20   |   20   |   20   | Candidat 1 en ballottage favorable   |
+|   10   |   30   |   30   |   30   | Candidat 1 éliminé                   |
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 4.8 : Écrivez un algorithme qui après avoir demandé un numéro de jour, de mois et d'année à l'utilisateur, renvoie s'il
+#s'agit ou non d'une date valide.
+
+JOUR          entier
+MOIS          entier
+ANNEE         entier
+RESTE         entier
+IND-ERREUR    entier
+Début
+Écrire « entrer le jour : »
+Lire JOUR
+Écrire « entrer le mois: »
+Lire MOIS
+Écrire « entrer l'année : »
+Lire ANNEE
+
+IND-ERREUR ← 0
+
+Selon MOIS
+      1, 3, 5, 7, 8, 10, 12
+          si JOUR < 1 ou JOUR > 31
+              IND-ERREUR ← 1
+          finsi
+      4, 6, 9, 11
+          si JOUR < 1 ou JOUR > 30
+              IND-ERREUR ← 1
+          finsi
+      2
+          ANNEE / 4 (mettre le reste dans RESTE)
+          si (RESTE > 0 et JOUR > 28) ou (RESTE = 0 et JOUR > 29) ou JOUR < 1
+              IND-ERREUR ← 1
+          finsi
+      autre
+          IND-ERREUR ← 1
+fin selon
+
+Si IND-ERREUR == 1
+      écrire « date invalide »
+sinon
+      écrire « date valide »
+finsi
+Fin
+
+Jeu de test :
+
+| JOUR | MOIS | ANNEE |  RESULTAT ATTENDU  |        RESULTAT          |
+|------|------|-------|--------------------|--------------------------|
+|   1  |   1  |  2023 |    date valide     |        date valide       |
+|   0  |   1  |  2023 |   date invalide    |       date invalide      |
+|  31  |   1  |  2023 |    date valide     |        date valide       |
+|  32  |   1  |  2023 |   date invalide    |       date invalide      |
+|  31  |   4  |  2023 |   date invalide    |       date invalide      |
+|  30  |   4  |  2023 |    date valide     |        date valide       |
+|  28  |   2  |  2023 |    date valide     |        date valide       |
+|  29  |   2  |  2023 |   date invalide    |       date invalide      |
+|  29  |   2  |  2020 |    date valide     |        date valide       |
+|   1  |   0  |  2023 |   date invalide    |       date invalide      |
+|   1  |  13  |  2023 |   date invalide    |       date invalide      |
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 5.3 et 5.4 : Écrire un algorithme qui demande un nombre de départ, et qui ensuite affiche les dix nombres suivants.
+#Par exemple, si l'utilisateur entre le nombre 17, le programme affichera les nombres de 18 à 27.
+#Utilisation de l'instruction TANT QUE
+N       entier
+CPT     entier
+Début
+CPT ← 0
+Écrire « entrer un nombre : »
+Lire N
+tant que CPT < 10
+    CPT ← CPT + 1
+    N ← N + 1
+    écrire N
+fin tant que
+Fin
+
+#Utilisation de l'instruction POUR
+N       entier
+CPT     entier
+Début
+Écrire « entrer un nombre : »
+Lire N
+Pour CPT de 1 à 10
+    N ← N + 1
+    écrire N
+CPT suivant
+Fin
+
+Jeu de test :
+|    N    |         RESULTAT ATTENDU        |            RESULTAT             |
+|---------|---------------------------------|---------------------------------|
+|    0    |       1 2 3 4 5 6 7 8 9 10      |       1 2 3 4 5 6 7 8 9 10      |
+|   57    |  58 59 60 61 62 63 64 65 66 67  |  58 59 60 61 62 63 64 65 66 67  |
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 5.5 : Écrire un algorithme qui demande un nombre de départ, et qui ensuite écrit la table de multiplication de ce nombre
+NB     entier
+I     entier
+Début
+Écrire « entrer un nombre : »
+Lire NB
+Écrire « Table de » NB
+Pour I de 1 à 10
+      écrire NB « x » I « = » NB * I
+I suivant
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 5.6 : Écrire un algorithme qui demande un nombre de départ, et qui calcule la somme des entiers jusqu’à ce nombre.
+#NB : on souhaite afficher uniquement le résultat, pas la décomposition du calcul.
+X       entier
+N       entier
+SOMME   entier
+Début
+Écrire « entrer un nombre : »
+Lire X
+SOMME ← 0
+Pour N de 1 à X
+      SOMME ← SOMME + N
+N suivant
+Écrire « SOMME : » SOMME
+Fin
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 5.7 : Écrire un algorithme qui demande un nombre de départ, et qui calcule sa factorielle.
+X         entier
+N         entier
+PRODUIT   entier
+Début
+Écrire « entrer un nombre : »
+Lire X
+PRODUIT ← 0
+Pour N de 1 à X
+        PRODUIT ← PRODUIT * N
+N suivant
+Écrire « Factoriel de » X « : » PRODUIT
+Fin
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 5.10 : Lire la suite des prix (en euros entiers et terminée par zéro) des achats d’un client. Calculer la somme qu’il doit,
+#lire la somme qu’il paye, et simuler la remise de la monnaie en affichant les textes "10 Euros", "5 Euros" et "1 Euro" autant de
+#fois qu’il y a de coupures de chaque sorte à rendre.
+PRIX       entier
+SOMME      entier
+PAYE       entier
+DIF        entier
+Début
+SOMME ← 0
+Écrire « entrer un prix: »
+Lire PRIX
+tant que PRIX <> 0
+      SOMME ← SOMME + PRIX
+      écrire « entrer un prix : »
+      lire PRIX
+fin tant que
+
+Écrire « vous devez payer : » SOMME
+Écrire « somme payée : »
+Lire PAYE
+
+si PAYE < SOMME
+      écrire « ajouter encore ! »
+      lire PAYE
+finsi
+
+DIF ← PAYE – SOMME
+tant que DIF <> 0
+  si DIF >= 10
+      écrire « rendu 10 euros »
+      DIF ← DIF – 10
+  sinon
+      si DIF >= 5
+         écrire « rendu 5 euros »
+         DIF ← DIF – 5 sinon
+      sinon
+          si DIF >= 1
+              écrire « rendu 1 euros »
+              DIF ← DIF – 1
+          finsi
+      finsi
+  finsi
+fin tant que
+Écrire « merci pour vos achats et à bientôt chez ALGO »
+fin
+
+Jeu de test :
+
+| PRIX | SOMME | PAYE |        RENDU         |
+|------|-------|------|----------------------|
+|   2  |   2   |  20  |  10 + 5 + 1 + 1 + 1  |
+|   5  |   7   |  18  |        10 + 1        |    
+|  10  |   18  |  50  | 10 + 10 + 10 + 1 + 1 |
+|   1  |   18  |  25  |       5 + 1 + 1      |    
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 6.1 : Écrire un algorithme qui déclare et remplisse un tableau de 7 valeurs numériques en les mettant toutes à zéro.
+Tableau tab[6]     numérique
+I                  entier
+Début
+Pour I de 0 à 6
+      tab[i] ← 0
+      écrire « tab[ » I « ] : » tab[i]
+I suivant
+Fin
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 6.8 : Écrivez un algorithme permettant à l’utilisateur de saisir 10 valeurs positives ou négatives.
+Enfin, une fois la saisie terminée, le programme affichera le nombre de valeurs négatives et le nombre de valeurs positives.
+Tableau VAL[9]       entier signé
+I                    entier
+CPT1                 entier
+CPT2                 entier
+Début
+CPT1 ← 0
+CPT2 ← 0
+Pour I de 0 à 9
+        écrire « veuillez saisir une valeur : »
+        lire VAL[I]
+        si VAL[I] >= 0
+              CPT1 ← CPT1 + 1
+        sinon
+              CPT2 ← CPT2 + 1
+        finsi
+I suivant
+Écrire « nombre valeurs positives : » CPT1
+Écrire « nombre valeurs négatives: » CPT2
+Fin
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 6.10 : Écrivez un algorithme constituant un tableau, à partir de deux tableaux de même longueur préalablement saisis.
+#Le nouveau tableau sera la somme des éléments des deux tableaux de départ.
+Tableau VAL1[7]      entier
+Tableau VAL2[7]      entier
+Tableau VAL3[7]      entier
+I                    entier
+Début
+Pour I de 0 à 7
+          VAL3[I] ← VAL1[I] + VAL2[I]
+I suivant
+Fin
+
+#Variante : Faire la somme uniquement pour les postes d'indice pair
+Début
+pour I de 0 à 7 pas 2
+        VAL3[I] ← VAL1[I] + VAL2[I]
+I suivant
+Fin
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+#Exercice 6.11 : Écrivez un algorithme qui multiplie chaque élément du tableau 1 par chaque élément du tableau 2, et additionner le tout.
+Tableau VAL1[3]      entier
+Tableau VAL2[1]      entier
+TOTAL                entier
+I                    entier
+J                    entier
+Début
+TOTAL ← 0
+Pour I de 0 à 3
+      pour J de 0 à 1
+            TOTAL ← TOTAL + (VAL1[I] * VAL2[J])
+      J suivant
+I suivant
+Écrire « Résultat : » TOTAL
+Fin
+
+Jeu de test :
+
+| I | VAL[I] | J | VAL[J] |  TOTAL  |
+|---|--------|---|--------|---------|
+| 0 |    4   | 0 |    3   |    12   |
+| 0 |    4   | 1 |    6   |    36   |
+| 1 |    8   | 0 |    3   |    60   |
+| 1 |    8   | 1 |    6   |   108   |
+| 2 |    7   | 0 |    3   |   129   |
+| 2 |    7   | 1 |    6   |   171   |
+| 3 |   12   | 0 |    3   |   207   |
+| 3 |   12   | 1 |    6   |   279   |
+
+Résultat : 279
+
+----------------------------------------------------------------------------------------------------------------------------------

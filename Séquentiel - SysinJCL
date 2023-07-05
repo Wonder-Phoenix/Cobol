@@ -1,0 +1,173 @@
+#********************************************************************************************************************#
+#  ÉNONCÉ : Écrire le programme FEXO3 qui alimente le nouveau fichier séquentiel APIn.COB.FEXO3 par des lignes       #
+#           renseignées dans la Sysin du step d'exécution du programme. Ce fichier sera créé dans ce step et         #
+#           préalablement supprimé dans un step précédant.                                                           #
+#********************************************************************************************************************#
+
+#PROGRAMME D'ECRITURE DANS UN FICHIER SEQUENTIEL
+
+#Caractéristiques du fichier :
+#– organisation du fichier : séquentielle
+#– longueur enregistrement : 50 caracteres
+#– taille du bloc : par défaut
+#– format des enregistrements : fixe bloqué
+#– taille du fichier : 1 piste
+
+
+
+#*******************************************************************#
+#                            PROGRAMME                              #
+#*******************************************************************#
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. FEXO3.
+       AUTHOR. SV.
+       DATE-WRITTEN. 31/03/2023.
+      ******************************************************************
+      *  FONCTION DU PROGRAMME : LECTURE DU FICHIER SEQUENTIEL         *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+      * LE CARACTERE POUR LA PONCTUATION DECIMALE EST LA VIRGULE
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+           
+      * DECLARATION DU FICHIER
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT FLIGNE ASSIGN FLIGNEDD
+                  ORGANIZATION IS SEQUENTIAL
+                  ACCESS MODE  IS SEQUENTIAL
+                  FILE STATUS  IS FS-LIGNE.
+                  
+       DATA DIVISION.
+      * DESCRIPTION DE L'ENREGISTREMENT DANS LE BUFFER
+       FILE SECTION.
+       FD  FLIGNE
+           RECORDING MODE IS F.
+           
+      * BUFFER : ENREGRISTREMENT FAIT 50 CAR DE LONG
+       01  ENR-LIGNE         PIC X(50).
+       
+       WORKING-STORAGE SECTION.
+      * DECLARATION DU FILE STATUS
+       01  FS-LIGNE          PIC 99     VALUE ZEROES.
+       01  WS-LIGNE          PIC X(50).
+       
+       PROCEDURE DIVISION.
+      * OUVERTURE EN ECRITURE
+             OPEN OUTPUT FLIGNE
+             IF FS-LIGNE NOT = ZEROES
+                DISPLAY 'ERREUR OPEN FLIGNE, FS : ' FS-LIGNE
+                PERFORM FIN
+             END-IF
+             
+        * 1ER ACCEPT
+             ACCEPT WS-LIGNE
+             
+        * BOUCLE DE TRAITEMENT
+             PERFORM UNTIL WS-LIGNE = 'FIN'
+                DISPLAY 'WS-LIGNE : ' WS-LIGNE
+                WRITE ENR-LIGNE FROM WS-LIGNE
+                IF FS-LIGNE NOT = ZEROES
+                   DISPLAY 'ERREUR WRITE, FS : ' FS-LIGNE
+                   PERFORM FIN
+                END-IF
+                ACCEPT WS-LIGNE
+             END-PERFORM
+             .
+             
+        * FIN
+         FIN.
+        * FERMETURE DU FICHCIERV;GH,FRJT
+             CLOSE FLIGNE
+             STOP RUN
+             
+
+
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API7F3   JOB 'SDJ FORMATION',MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,
+//   NOTIFY=&SYSUID,COND=(4,LT),TIME=(,3),RESTART=*
+//*
+//* BIBLIOTHEQUE DES LOAD MODULES
+//JOBLIB   DD DSN=API7.COBOL.LOAD,DISP=SHR
+//         DD DSN=CEE.SCEERUN,DISP=SHR
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API7.SOURCE.COBOL(FEXO3)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//             DD   DISP=SHR,DSN=API7.SOURCE.COPY
+//LKED.SYSLMOD DD   DSN=API7.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME FEXO3(R)
+//*
+//* SUPPRESSION DU FICHIER
+//STEP2        EXEC PGM=IEFBR14
+//FEXO3DD      DD   DSN=API7.COB.FEXO3,DISP=(MOD,DELETE,DELETE),
+//             DCB=(LRECL=50,RECFM=FB,DSORG=PS),SPACE=(TRK,(1))
+//*
+//* EXECUTION DU PROGRAMME
+//STEP3        EXEC PGM=FEXO3
+//SYSOUT       DD   SYSOUT=*
+//FLIGNEDD     DD   DSN=API7.COB.FEXO3,DISP=(,CATLG,DELETE),
+//             DCB=(LRECL=50,RECFM=FB,DSORG=PS),SPACE=(TRK,(1))
+//SYSIN        DD   *
+SOUS LE PONT MIRABEAU COULE LA SEINE
+ET NOS AMOURS
+FAUT-IL QU'IL M'EN SOUVIENNE
+LA JOIE VENAIT TOUJOURS APRèS LA PEINE
+VIENNE LA NUIT SONNE L'HEURE
+LES JOURS S'EN VONT JE DEMEURE
+LES MAINS DANS LES MAINS RESTONS FACE à FACE
+TANDIS QUE SOUS
+LE PONT DE NOS BRAS PASSE
+DES éTERNELS REGARDS L'ONDE SI LASSE
+VIENNE LA NUIT SONNE L'HEURE
+LES JOURS S'EN VONT JE DEMEURE
+L'AMOUR S'EN VA COMME CETTE EAU COURANTE
+L'AMOUR S'EN VA
+COMME LA VIE EST LENTE
+ET COMME L'ESPéRANCE EST VIOLENTE
+VIENNE LA NUIT SONNE L'HEURE
+LES JOURS S'EN VONT JE DEMEURE
+PASSENT LES JOURS ET PASSENT LES SEMAINES
+NI TEMPS PASSé
+NI LES AMOURS REVIENNENT
+SOUS LE PONT MIRABEAU COULE LA SEINE
+VIENNE LA NUIT SONNE L'HEURE
+LES JOURS S'EN VONT JE DEMEURE
+FIN
+//
+
+#*******************************************************************#
+#                              SYSOUT                               #
+#*******************************************************************#
+********************************* Top of Data **********************************
+SOUS LE PONT MIRABEAU COULE LA SEINE
+ET NOS AMOURS
+FAUT-IL QU'IL M'EN SOUVIENNE
+LA JOIE VENAIT TOUJOURS APRèS LA PEINE
+VIENNE LA NUIT SONNE L'HEURE
+LES JOURS S'EN VONT JE DEMEURE
+LES MAINS DANS LES MAINS RESTONS FACE à FACE
+TANDIS QUE SOUS
+LE PONT DE NOS BRAS PASSE
+DES éTERNELS REGARDS L'ONDE SI LASSE
+VIENNE LA NUIT SONNE L'HEURE
+LES JOURS S'EN VONT JE DEMEURE
+L'AMOUR S'EN VA COMME CETTE EAU COURANTE
+L'AMOUR S'EN VA
+COMME LA VIE EST LENTE
+ET COMME L'ESPéRANCE EST VIOLENTE
+VIENNE LA NUIT SONNE L'HEURE
+LES JOURS S'EN VONT JE DEMEURE
+PASSENT LES JOURS ET PASSENT LES SEMAINES
+NI TEMPS PASSé
+NI LES AMOURS REVIENNENT
+SOUS LE PONT MIRABEAU COULE LA SEINE
+VIENNE LA NUIT SONNE L'HEURE
+LES JOURS S'EN VONT JE DEMEURE
+******************************** Bottom of Data ********************************

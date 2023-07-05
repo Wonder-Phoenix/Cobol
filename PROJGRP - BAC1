@@ -1,0 +1,654 @@
+   CBL DYNAM
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. BAC1.
+       AUTHOR. TEAMHDS.
+       DATE-WRITTEN. 07/06/23.
+      ******************************************************************
+      *            P R O J E T    D E    G R O U P E                   *
+      *              Q U I    F O N C T I O N N E !                    *
+      *                                                                *
+      *                           /^^\                                 *
+      *                        ///    \\\                              *
+      *                     ///          \\\                           *
+      *                   ///      |D       \\\                        *
+      *                ///    BAC  |D   VIR    \\\                     *
+      *               |___________________________|                    *
+      *               |___________________________|                    *
+      *                |###|      |###|      |###|                     *
+      *                 | |        | |        | |                      *
+      *                 | |        | |        | |                      *
+      *                 | |        | |        | |                      *
+      *                #####      #####      #####                     *
+      *              __|___|______|___|______|___|                     *
+      *            -----------------------------------                 *
+      *          ------HERVE-----SOPHIE------DAVID------               *
+      *                                                                *
+      *          ------WIFEK-----THOMAS------NADIA------               *
+      *                                                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      * DECLARATION DU FICHIER D'EDITION
+           SELECT BACMVT ASSIGN TO BACMVT
+              ORGANIZATION IS SEQUENTIAL
+              ACCESS MODE IS SEQUENTIAL
+              FILE STATUS IS FS-BACMVT.
+
+       DATA DIVISION.
+      * DECLARATION DU BUFFER
+       FILE SECTION.
+       FD BACMVT RECORDING MODE IS F.
+       01 ENR-BACMVT            PIC X(100).
+
+       WORKING-STORAGE SECTION.
+
+      * FILE STATUS
+       01 FS-BACMVT             PIC 99.
+
+      * COMPTEUR
+       01 CPT-LUS               PIC 99     VALUE ZEROES.
+
+      * VARIABLES UTILES AU PROGRAMME
+       01 WS-BACMVT.
+          05 WS-CODMVT          PIC X.
+          05 WS-NUMCLI          PIC 9(2).
+          05 WS-TYPCLI          PIC X.
+          05 WS-STATUT          PIC X.
+          05 WS-NOM000          PIC X(15).
+          05 WS-PRENOM          PIC X(15).
+          05 WS-VILLE0          PIC X(15).
+          05 WS-CDPOST          PIC X(5).
+          05 WS-DATENT          PIC 9(8).
+          05 WS-NUMCPT          PIC 9(2).
+          05 WS-DATOUV          PIC 9(8).
+          05 WS-SOLDE0          PIC S9(9)V9(2).
+          05                    PIC X(16).
+
+      * GESTION DE LA DATE SUR 8 CARACTERES
+       01 DATE8.
+           05 ANNEE             PIC X(4).
+           05 MOIS              PIC X(2).
+           05 JOUR              PIC X(2).
+
+      * GESTION DE LA DATE SUR 10 CARACTERES
+       01 DATE10.
+           05 ANNEE10           PIC X(4).
+           05                   PIC X           VALUE '-'.
+           05 MOIS10            PIC X(2).
+           05                   PIC X           VALUE '-'.
+           05 JOUR10            PIC X(2).
+
+       01 WS-DATMAJ             PIC X(10) VALUE '10-10-1010'.
+       01 DATE-FORM             PIC X(10).
+
+      * VARIABLES DE CONVERSION
+       01 WS-NUMCLI-COMP        PIC S9(4)  COMP.
+       01 WS-TYPCLI-COMP        PIC X.
+       01 WS-STATUT-COMP        PIC X.
+       01 WS-NOM000-COMP        PIC X(15).
+       01 WS-PRENOM-COMP        PIC X(15).
+       01 WS-VILLE0-COMP        PIC X(15).
+       01 WS-CDPOST-COMP        PIC S9(5)V USAGE COMP-3.
+       01 WS-SOLDE0-COMP        PIC S9(9)V99 COMP-3.
+       01 WS-NUMCPT-COMP        PIC S9(4)  COMP.
+       01 WS-CDPOST-NUM         PIC 9(5).
+
+      * DECLARATION DE LA TABLE BAC_CLIENT
+           EXEC SQL INCLUDE BCLIENT END-EXEC.
+      * DECLARATION DE LA TABLE BAC_STATUT
+           EXEC SQL INCLUDE BSTATUT END-EXEC.
+      * DECLARATION DE LA TABLE BAC_CPTCLI
+           EXEC SQL INCLUDE BCPTCLI END-EXEC.
+      * DECLARATION DE LA TABLE BAC_COMPTE
+           EXEC SQL INCLUDE BCOMPTE END-EXEC.
+      * DECLARATION DE LA TABLE BAC_OPER
+           EXEC SQL INCLUDE BOPER   END-EXEC.
+      * DECLARATION DE SQLCA
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+
+      * TABLE D'ERREURS DANS API0.SOURCE.COPY
+           COPY CODEERR.
+
+      * DECLARATION DES HOST-VARIABLES DE API0.BAC_CLIENT
+       01 CODMVT                PIC X.
+
+      * HOST VARIABLES DE LA TABLE BAC_CLIENT
+       01 HVCLI-CLIENT.
+          05 HVCLI-NUMCLI       PIC S9(4) USAGE COMP.
+          05 HVCLI-STATUT       PIC X.
+          05 HVCLI-TYPCLI       PIC X.
+          05 HVCLI-NOM000       PIC X(15).
+          05 HVCLI-PRENOM       PIC X(15).
+          05 HVCLI-VILLE0       PIC X(15).
+          05 HVCLI-CDPOST       PIC S9(5)V USAGE COMP-3.
+          05 HVCLI-DATENT       PIC X(10).
+          05 HVCLI-DATMAJ       PIC X(10).
+
+      *
+       01 CDPOSTED              PIC 9(5).
+
+      * HOST VARIABLES DE LA TABLE BAC_STATUT
+       01 HVS-STATUT.
+          05 HVS-STATUT         PIC X.
+          05 HVS-LIBSTA         PIC X(15).
+
+      * HOST VARIABLES DE LA TABLE BAC_COMPTE
+       01 HVCOM-COMPTE.
+          05 HVCOM-NUMCPT       PIC S9(4) USAGE COMP.
+          05 HVCOM-STATUT       PIC X.
+          05 HVCOM-SOLDE0       PIC S9(9)V99 USAGE COMP-3.
+          05 HVCOM-DATOUV       PIC X(10).
+          05 HVCOM-DATMAJ       PIC X(10).
+
+      * HOST VARIABLES DE LA TABLE BAC_CPTCLI
+       01 HVCC-CPTCLI.
+          05 HVCC-NUMCLI        PIC S9(4) USAGE COMP.
+          05 HVCC-NUMCPT        PIC S9(4) USAGE COMP.
+
+      * HOST VARIABLES DE LA TABLE BAC_OPER
+       01 HVO-OPER.
+          05 HVO-NUMOPE         PIC S9(4) USAGE COMP.
+          05 HVO-NUMCPT         PIC S9(4) USAGE COMP.
+          05 HVO-APPEME         PIC X(3).
+          05 HVO-TEXTE0         PIC X(80) VALUE SPACES.
+          05 HVO-MTTOPE         PIC S9(9)V99 USAGE COMP-3.
+          05 HVO-MTTCOM         PIC S9(9)V99 USAGE COMP-3.
+          05 HVO-DATOPE         PIC X(10).
+
+      *
+       01 CONV-NUMCLI           PIC S9(4) USAGE COMP.
+       01 CONV-NUMCPT           PIC S9(4) USAGE COMP.
+
+      * DESCRIPTION DE LA ZONE DE COMMUNICATION AVEC LE SOUS-PROGRAMME
+      * DE CONTROLE DE DATE (NOM : SPDAT)
+       01  ZCOM.
+           05 ZDATE.
+              10 ZANNEE       PIC 9(4).
+              10 ZMOIS        PIC 9(2).
+              10 ZJOUR        PIC 9(2).
+           05 ZCDRET          PIC 9.
+              88 ZCDRET-OK    VALUE 0.
+              88 ZCDRET-KO    VALUE 1.
+           05 ZDATE-EDIT      PIC X(17).
+       01  SPDAT              PIC X(8) VALUE 'SPDAT'.
+
+
+      * EDITION SQLCODE
+       01 ED-SQLCODE PIC +(10) VALUE SPACES.
+
+      * INDICATEUR D'ERREUR
+       01           PIC XX     VALUE SPACES.
+          88 OK                VALUE 'OK'.
+          88 ERREUR            VALUE 'KO'.
+
+      * INDICATEUR DE FIN DE FICHIER
+       01 FIN-FICHIER    PIC 9.
+          88 FIN-FICH          VALUE 0.
+
+      **************************************************************
+      *                                                            *
+      *          P R O C E D U R E   D I V I S I O N               *
+      *                                                            *
+      **************************************************************
+       PROCEDURE DIVISION.
+           PERFORM DEBUT
+           PERFORM UNTIL FIN-FICH
+               SET OK TO TRUE
+                EVALUATE WS-CODMVT
+      * CODMVT = 1 ; CONTROLE DONNEES ; CREATION DU CLIENT
+                 WHEN 1
+                          PERFORM CONTROLE-CREA-CLI
+                           IF OK
+                             PERFORM CREA-CLI
+                             DISPLAY 'CREA CLIENT' WS-BACMVT
+                           END-IF
+      * CODMVT = 2 ; CONTROLE DONNEES ; CREATION DU COMPTE
+                 WHEN 2
+                          PERFORM CONTROLE-CREA-COM
+                           IF OK
+                             PERFORM CREA-COM
+                             DISPLAY 'CREA COMPTE' WS-BACMVT
+                           END-IF
+      * CODMVT = 3 ; CONTROLE DONNEES ; CREATION DU CLIENT ET DU COMPTE
+                 WHEN 3
+                          PERFORM CONTROLE-CREA-CLI
+                           IF OK
+                             PERFORM CREA-CLI
+                           END-IF
+
+                          PERFORM CONTROLE-CREA-COM
+                           IF OK
+                             PERFORM CREA-COM
+                           END-IF
+                             DISPLAY 'CREA CLIENT & COMPTE' WS-BACMVT
+      * CODMVT = 4 ; CONTROLE DONNEES ; MODIFICATION DU CLIENT
+                 WHEN 4
+                          DISPLAY 'AZER10'
+                          PERFORM CONTROL-MOD-CLI
+                           IF OK
+                             DISPLAY 'MODIF CLIENT' WS-BACMVT
+                             PERFORM MOD-CLI
+                           END-IF
+                 WHEN OTHER
+                           DISPLAY POSTE-ERR(2)
+                END-EVALUATE
+           DISPLAY WS-BACMVT
+           PERFORM READ-BACMVT
+           END-PERFORM
+           PERFORM FIN
+           .
+
+      **************************************************************
+      *                                                            *
+      *   ETIQUETTES :   L.233  CREATION DU CLIENT                 *
+      *                  L.275  CREATION DU COMPTE                 *
+      *                  L.334  MODIFICATION DU CLIENT             *
+      *                                                            *
+      **************************************************************
+
+      * CREATION DU CLIENT DANS TABLE BAC_CLIENT
+       CREA-CLI.
+           MOVE WS-NUMCLI     TO WS-NUMCLI-COMP
+           MOVE WS-TYPCLI     TO WS-TYPCLI-COMP
+           MOVE WS-STATUT     TO WS-STATUT-COMP
+           MOVE WS-NOM000     TO WS-NOM000-COMP
+           MOVE WS-PRENOM     TO WS-PRENOM-COMP
+           MOVE WS-VILLE0     TO WS-VILLE0-COMP
+           MOVE 0             TO WS-CDPOST-COMP
+           MOVE WS-CDPOST     TO WS-CDPOST-NUM
+           ADD  WS-CDPOST-NUM TO WS-CDPOST-COMP
+           MOVE WS-DATENT     TO DATE8
+           MOVE ANNEE         TO ANNEE10
+           MOVE MOIS          TO MOIS10
+           MOVE JOUR          TO JOUR10
+           MOVE DATE10        TO DATE-FORM
+
+            EXEC SQL
+                INSERT INTO API0.BAC_CLIENT
+                  VALUES
+                   (:WS-NUMCLI-COMP,
+                    :WS-STATUT-COMP,
+                    :WS-TYPCLI-COMP,
+                    :WS-NOM000-COMP,
+                    :WS-PRENOM-COMP,
+                    :WS-VILLE0-COMP,
+                    :WS-CDPOST-COMP,
+                    :DATE-FORM,
+                    DEFAULT)
+           END-EXEC
+
+      * CONTROLE SQLCODE POUR CREATION DU CLIENT
+           IF SQLCODE = ZEROES
+              DISPLAY '--- CREATION CLIENT OK'
+           ELSE
+              MOVE SQLCODE TO ED-SQLCODE
+              DISPLAY 'ERR INSERT CLIENT, SQLCODE : ' ED-SQLCODE
+              PERFORM FIN-ERREUR
+           END-IF
+           .
+
+
+      * CREATION DU COMPTE DANS TABLE BAC_COMPTE
+       CREA-COM.
+           MOVE WS-NUMCPT TO WS-NUMCPT-COMP
+           MOVE 'O'       TO WS-STATUT-COMP
+           MOVE WS-SOLDE0 TO WS-SOLDE0-COMP
+           MOVE WS-DATOUV TO DATE8
+           MOVE ANNEE     TO ANNEE10
+           MOVE MOIS      TO MOIS10
+           MOVE JOUR      TO JOUR10
+           MOVE DATE10    TO DATE-FORM
+
+           EXEC SQL
+                INSERT INTO API0.BAC_COMPTE
+                  VALUES
+                   (:WS-NUMCPT-COMP,
+                    :WS-STATUT-COMP,
+                    :WS-SOLDE0-COMP,
+                    :DATE-FORM,
+                    DEFAULT)
+           END-EXEC
+
+           EXEC SQL
+           COMMIT
+           END-EXEC
+
+      * CONTROLE SQLCODE POUR CREATION DU COMPTE
+           IF SQLCODE = ZEROES
+              DISPLAY '--- CREATION COMPTE OK'
+
+           ELSE
+              MOVE SQLCODE TO ED-SQLCODE
+              DISPLAY 'ERR INSERT COMPTE, SQLCODE : ' ED-SQLCODE
+              PERFORM FIN-ERREUR
+           END-IF
+
+      * CREATION NUMERO CLIENT ET NUMERO COMPTE DANS TABLE BAC_CPTCLI
+           MOVE WS-NUMCLI TO WS-NUMCLI-COMP
+           DISPLAY WS-NUMCLI
+           DISPLAY WS-NUMCPT
+           DISPLAY WS-NUMCLI-COMP
+           DISPLAY WS-NUMCPT-COMP
+           EXEC SQL
+                INSERT INTO API0.BAC_CPTCLI
+                  VALUES
+                   (:WS-NUMCLI-COMP,
+                    :WS-NUMCPT-COMP)
+           END-EXEC
+
+      * CONTROLE SQLCODE POUR CREATION DANS TABLE BAC_CPTCLI
+           IF SQLCODE = ZEROES
+              DISPLAY '--- CREATION CPTCLI OK'
+           ELSE
+              MOVE SQLCODE TO ED-SQLCODE
+              DISPLAY 'ERR INSERT CPTCLI, SQLCODE : ' ED-SQLCODE
+              PERFORM FIN-ERREUR
+           END-IF
+           .
+
+
+      * MODIFICATION DU CLIENT DANS TABLE BAC_CLIENT
+       MOD-CLI.
+           MOVE WS-DATENT TO DATE8
+           MOVE ANNEE     TO ANNEE10
+           MOVE MOIS      TO MOIS10
+           MOVE JOUR      TO JOUR10
+           MOVE DATE10    TO DATE-FORM
+           MOVE WS-NUMCLI TO WS-NUMCLI-COMP
+           MOVE 0         TO WS-CDPOST-COMP
+           MOVE WS-CDPOST TO WS-CDPOST-NUM
+           ADD  WS-CDPOST-NUM TO WS-CDPOST-COMP
+
+           EXEC SQL
+                UPDATE API0.BAC_CLIENT SET
+                   STATUT = :WS-STATUT,
+                   TYPCLI = :WS-TYPCLI,
+                   NOM000 = :WS-NOM000,
+                   PRENOM = :WS-PRENOM,
+                   VILLE0 = :WS-VILLE0,
+                   CDPOST = :WS-CDPOST-COMP,
+                   DATENT = :DATE-FORM,
+                   DATMAJ = :WS-DATMAJ
+                WHERE NUMCLI = :WS-NUMCLI-COMP
+            END-EXEC
+
+           MOVE WS-DATOUV TO DATE8
+           MOVE ANNEE     TO ANNEE10
+           MOVE MOIS      TO MOIS10
+           MOVE JOUR      TO JOUR10
+           MOVE DATE10    TO DATE-FORM
+           MOVE WS-NUMCPT TO WS-NUMCPT-COMP
+           MOVE WS-SOLDE0 TO WS-SOLDE0-COMP
+
+      * MODIFICATION DU CLIENT DANS TABLE BAC_COMPTE
+           EXEC SQL
+                UPDATE API0.BAC_COMPTE SET
+                   DATOUV = :DATE-FORM,
+                   SOLDE0 = :WS-SOLDE0-COMP,
+                   DATMAJ = :WS-DATMAJ
+                WHERE NUMCPT = :WS-NUMCPT-COMP
+            END-EXEC.
+
+      **************************************************************
+      *                                                            *
+      *          CONTROLE DES CHAMPS SELON CODE MOUVEMENT          *
+      *                                                            *
+      **************************************************************
+
+      * CONTROL DE LA VALIDITE DES DONNEES D'ENTREE POUR CREATION CLIENT
+       CONTROLE-CREA-CLI.
+           PERFORM NUMCLI-CONFORME
+           PERFORM CLIENT-INEXISTANT
+           PERFORM TYPCLI-CONFORME
+           PERFORM STATUT-CONFORME
+           PERFORM NOM000-OBLIGATOIRE
+           PERFORM PRENOM-OBLIGATOIRE
+           PERFORM CDPOST-NUMERIQUE.
+
+      * CONTROL DE LA VALIDITE DES DONNEES D'ENTREE POUR CREATION COMPTE
+       CONTROLE-CREA-COM.
+           PERFORM NUMCLI-CONFORME
+           PERFORM CLIENT-EXISTANT
+           PERFORM NUMCPT-CONFORME
+           PERFORM COMPTE-EXISTANT
+           PERFORM DATOUV-CONFORME
+           PERFORM SOLDE0-CONFORME.
+
+      * CONTROL DE LA VALIDITE DES DONNEES D'ENTREE POUR MODIFICATION
+       CONTROL-MOD-CLI.
+           PERFORM NUMCLI-CONFORME
+           PERFORM CLIENT-EXISTANT
+           PERFORM TYPCLI-CONFORME
+           PERFORM STATUT-CONFORME
+           PERFORM NOM000-OBLIGATOIRE
+           PERFORM PRENOM-OBLIGATOIRE
+           PERFORM CDPOST-NUMERIQUE.
+
+      **************************************************************
+      *                                                            *
+      *   ETIQUETTES :   L.233  CREATION DU CLIENT                 *
+      *                  L.275  CREATION DU COMPTE                 *
+      *                  L.334  MODIFICATION DU CLIENT             *
+      *                                                            *
+      **************************************************************
+      **************************************************************
+      *                                                            *
+      *          CONTROLE DES CHAMPS SELON CODE MOUVEMENT          *
+      *                                                            *
+      **************************************************************
+
+       TYPCLI-CONFORME.
+      * TYPE DE CLIENT (TYPCLI) OBLIGATOIRE + DOIT ETRE EGAL
+      * A 'E' (ENTREPRISE) OU 'P' (PARTICULIER)
+           IF WS-TYPCLI = SPACES
+              DISPLAY POSTE-ERR(21)
+              SET ERREUR TO TRUE
+           ELSE
+           IF NOT (WS-TYPCLI = 'E' OR WS-TYPCLI = 'P')
+              DISPLAY POSTE-ERR(22)
+              SET ERREUR TO TRUE
+           END-IF.
+
+       STATUT-CONFORME.
+      * STATUT DU CLIENT (STATUT) OBLIGATOIRE + DOIT ETRE EGAL
+      * A 'C' (CLIENT) OU 'P' (PROSPECT)
+           IF WS-STATUT = SPACES
+              DISPLAY POSTE-ERR(7)
+              SET ERREUR TO TRUE
+           ELSE
+           IF NOT (WS-STATUT  = 'C' OR WS-STATUT  = 'P')
+              DISPLAY POSTE-ERR(8)
+              SET ERREUR TO TRUE
+           END-IF.
+
+       NOM000-OBLIGATOIRE.
+      * NOM DU CLIENT (NOM000) OBLIGATOIRE
+           IF WS-NOM000 = SPACES
+              DISPLAY POSTE-ERR(9)
+              SET ERREUR TO TRUE
+           END-IF.
+
+       PRENOM-OBLIGATOIRE.
+      * SI TYPCLI = 'P' - PRENOM DU CLIENT OBLIGATOIRE
+           IF WS-PRENOM = SPACES AND WS-TYPCLI = 'P'
+              DISPLAY POSTE-ERR(10)
+              SET ERREUR TO TRUE
+           END-IF.
+
+       CDPOST-NUMERIQUE.
+      * CODE POSTAL DE RESIDENCE (CDPOST) FACULTATIF + NUMERIQUE
+           IF WS-CDPOST NOT NUMERIC
+              DISPLAY POSTE-ERR(36)
+              SET ERREUR TO TRUE
+           END-IF.
+
+       DATENT-CONFORME.
+      * DATE D'ENTREE (DATENT) FACULTATIF + COHERENTE AVEC LE SOUS
+      * PROGRAMME SPDAT (APPEL)
+           IF WS-DATENT NOT = ZEROES
+              MOVE WS-DATENT TO ZDATE
+              CALL SPDAT USING ZCOM
+              IF ZCDRET-KO
+                 DISPLAY POSTE-ERR(18)
+                 SET ERREUR TO TRUE
+              END-IF
+           END-IF.
+
+       CLIENT-INEXISTANT.
+      * CLIENT NE DOIT PAS EXISTER EN TABLE DB2 API0.BAC_CLIENT
+           MOVE WS-NUMCLI TO CONV-NUMCLI
+           EXEC SQL
+              SELECT NUMCLI
+              INTO :HVCLI-NUMCLI
+              FROM API0.BAC_CLIENT
+              WHERE NUMCLI = :CONV-NUMCLI
+           END-EXEC
+           EVALUATE SQLCODE
+             WHEN ZEROES
+               DISPLAY POSTE-ERR(5)
+               SET ERREUR TO TRUE
+             WHEN +100
+               SET OK TO TRUE
+             WHEN OTHER
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY POSTE-ERR(25)
+               SET ERREUR TO TRUE
+           END-EVALUATE.
+
+       CLIENT-EXISTANT.
+      * CLIENT DOIT EXISTER EN TABLE DB2 API0.BAC_CLIENT
+           MOVE WS-NUMCLI TO CONV-NUMCLI
+           EXEC SQL
+              SELECT NUMCLI
+              INTO :HVCLI-NUMCLI
+              FROM API0.BAC_CLIENT
+              WHERE NUMCLI = :CONV-NUMCLI
+           END-EXEC
+           EVALUATE SQLCODE
+             WHEN ZEROES
+               SET OK TO TRUE
+             WHEN +100
+               DISPLAY POSTE-ERR(6)
+               SET ERREUR TO TRUE
+             WHEN OTHER
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY POSTE-ERR(25)
+               SET ERREUR TO TRUE
+           END-EVALUATE.
+
+       NUMCLI-CONFORME.
+      * NUMERO DE CLIENT (NUMCLI) OBLIGATOIRE + NUMERIQUE
+           IF WS-NUMCLI = ZEROES
+              DISPLAY POSTE-ERR(3)
+              SET ERREUR TO TRUE
+           ELSE
+           IF WS-NUMCLI NOT NUMERIC
+              DISPLAY POSTE-ERR(4)
+              SET ERREUR TO TRUE
+           END-IF.
+
+       NUMCPT-CONFORME.
+      * NUMERO DE COMPTE OBLIGATOIRE + NUMERIQUE
+           IF WS-NUMCPT = ZEROES
+              DISPLAY POSTE-ERR(15)
+              SET ERREUR TO TRUE
+           ELSE
+           IF WS-NUMCPT NOT NUMERIC
+              DISPLAY POSTE-ERR(16)
+              SET ERREUR TO TRUE
+           END-IF.
+
+       COMPTE-EXISTANT.
+      * NUMERO DE COMPTE NE DOIT PAS EXISTER EN TABLE API0.BAC_COMPTE
+           MOVE WS-NUMCPT TO CONV-NUMCPT
+           EXEC SQL
+              SELECT NUMCPT
+              INTO :HVCOM-NUMCPT
+              FROM API0.BAC_COMPTE
+              WHERE NUMCPT = :CONV-NUMCPT
+           END-EXEC
+           EVALUATE SQLCODE
+             WHEN ZEROES
+               DISPLAY POSTE-ERR(5)
+               SET ERREUR TO TRUE
+             WHEN +100
+               SET OK TO TRUE
+             WHEN OTHER
+               MOVE SQLCODE TO ED-SQLCODE
+               DISPLAY POSTE-ERR(18)
+               SET ERREUR TO TRUE
+           END-EVALUATE
+           .
+
+       DATOUV-CONFORME.
+      * SI RENSEIGNEE, DOIT ETRE COHERENTE AVEC SOUS-PROGRAMME SPDAT
+           IF WS-DATOUV NOT = SPACES
+              MOVE WS-DATOUV TO ZDATE
+              CALL SPDAT USING ZCOM
+              IF ZCDRET-KO
+                 DISPLAY POSTE-ERR(20)
+                 SET ERREUR TO TRUE
+              END-IF
+           END-IF
+           .
+
+       SOLDE0-CONFORME.
+      * SOLDE DU COMPTE NUMERIQUE
+           IF WS-SOLDE0 NOT NUMERIC
+              DISPLAY POSTE-ERR(22)
+              SET ERREUR TO TRUE
+           END-IF
+           .
+
+      **************************************************************
+      *                                                            *
+      *               P E R F O R M    D E B U T                   *
+      *  OUVERTURE ET LECTURE DU FICHIER SEQUENTIELLE API0.BACMVT  *
+      *                                                            *
+      **************************************************************
+
+       DEBUT.
+           PERFORM OPEN-BACMVT
+           PERFORM READ-BACMVT.
+
+       OPEN-BACMVT.
+      * OUVERTURE BACMVT
+           OPEN INPUT BACMVT
+           MOVE 1 TO FIN-FICHIER
+           IF FS-BACMVT NOT = ZEROES
+              DISPLAY 'FS-BACMVT OPEN : ' FS-BACMVT
+              PERFORM FIN-ERREUR
+           END-IF.
+
+       READ-BACMVT.
+      * LECTURE BACMVT
+           READ BACMVT INTO WS-BACMVT
+           AT END SET FIN-FICH TO TRUE
+           ADD 1 TO CPT-LUS
+           MOVE ENR-BACMVT TO WS-BACMVT
+           IF FS-BACMVT NOT = ZEROES
+              DISPLAY 'FS-BACMVT READ : ' FS-BACMVT
+              PERFORM FIN-ERREUR
+           END-IF.
+
+      **************************************************************
+      *                                                            *
+      *            ETIQUETTES DE FIN ERREUR ET FIN                 *
+      *                                                            *
+      **************************************************************
+
+       FIN-ERREUR.
+           PERFORM FIN.
+
+       FIN.
+           CLOSE BACMVT
+           DISPLAY 'NBRE LUS :' CPT-LUS
+           STOP RUN.
+
+      *                                                 ////
+      *                                                (OO)
+      *                                          -OOO--(__)--OOO-

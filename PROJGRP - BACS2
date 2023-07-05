@@ -1,0 +1,217 @@
+         CBL DYNAM
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.   BACS2.
+       AUTHOR.       TEAMHDS.
+       DATE-WRITTEN. 31/05/2023.
+      ******************************************************************
+      *                                                                *
+      *    FONCTION : MISE A JOUR DU SOLDE PAR L'APPLICATION VIR ET    *
+      *               ACTUALISATION DE LA TABLE BAC_OPER               *
+      *                                                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+       DATA DIVISION.
+       FILE SECTION.
+       WORKING-STORAGE SECTION.
+
+      * DECLARATION DE LA TABLE BAC_CLIENT
+           EXEC SQL INCLUDE BCLIENT END-EXEC.
+      * DECLARATION DE LA TABLE BAC_STATUT
+           EXEC SQL INCLUDE BSTATUT END-EXEC.
+      * DECLARATION DE LA TABLE BAC_CPTCLI
+           EXEC SQL INCLUDE BCPTCLI END-EXEC.
+      * DECLARATION DE LA TABLE BAC_COMPTE
+           EXEC SQL INCLUDE BCOMPTE END-EXEC.
+      * DECLARATION DE LA TABLE BAC_OPER
+           EXEC SQL INCLUDE BOPER   END-EXEC.
+
+      * DECLARATION SQLCA
+           EXEC SQL INCLUDE SQLCA   END-EXEC.
+
+      * COMPTEUR ACTUALISATION BAC_COMPTE
+       01 CPT-COMPTE            PIC 99     VALUE ZEROES.
+
+      * COMPTEUR INSERTION BAC_OPER
+       01 CPT-OPER              PIC 99     VALUE ZEROES.
+
+      * HOST VARIABLES DE LA TABLE BAC_CLIENT
+       01 HVCLI-CLIENT.
+          05 HVCLI-NUMCLI       PIC S9(4) USAGE COMP.
+          05 HVCLI-STATUT       PIC X.
+          05 HVCLI-TYPCLI       PIC X.
+          05 HVCLI-NOM000       PIC X(15).
+          05 HVCLI-PRENOM       PIC X(15).
+          05 HVCLI-VILLE0       PIC X(15).
+          05 HVCLI-CDPOST       PIC S9(5)V USAGE COMP-3.
+          05 HVCLI-DATENT       PIC X(10).
+          05 HVCLI-DATMAJ       PIC X(10).
+
+      * HOST VARIABLES DE LA TABLE BAC_CLIENT
+       01 HVCOM-COMPTE.
+          05 HVCOM-NUMCPT       PIC S9(4) USAGE COMP.
+          05 HVCOM-STATUT       PIC X.
+          05 HVCOM-SOLDE0       PIC S9(9)V99 USAGE COMP-3.
+          05 HVCOM-DATOUV       PIC X(10).
+          05 HVCOM-DATMAJ       PIC X(10).
+
+      * HOST VARIABLES DE LA TABLE BAC_OPER
+       01 HVO-OPER.
+          05 HVO-NUMOPE         PIC S9(4) USAGE COMP.
+          05 HVO-NUMCPT         PIC S9(4) USAGE COMP.
+          05 HVO-APPEME         PIC X(3).
+          05 HVO-TEXTE0         PIC X(80) VALUE SPACES.
+          05 HVO-MTTOPE         PIC S9(9)V99 USAGE COMP-3.
+          05 HVO-MTTCOM         PIC S9(9)V99 USAGE COMP-3.
+          05 HVO-DATOPE         PIC X(10).
+
+      * VARIABLES UTILE A L'ACCESSEUR
+       01 WS-SOLDE0D            PIC S9(9)V99 USAGE COMP-3.
+       01 WS-SOLDE0C            PIC S9(9)V99 USAGE COMP-3.
+       01 WS-APPEME             PIC X(3).
+       01 WS-NUMCPTD            PIC S9(4) USAGE COMP.
+       01 WS-TEXTEOPE           PIC X(50).
+       01 WS-MTTRANS            PIC S9(9)V99 USAGE COMP-3.
+       01 WS-MTTCOM             PIC S9(9)V99 USAGE COMP-3.
+
+      * ZONE DE COMMUNICATION RELIANT BACS3
+       01 ZCOMS3.
+          05 ZMTTRANS           PIC S9(9)V9(9).
+          05 ZTYPCLI            PIC X.
+          05 ZMTTCOM            PIC S9(9)V9(2).
+          05 ZNUMCLI            PIC 9(2).
+
+       LINKAGE SECTION.
+      * ZONE DE COMMUNICATION DE L'ACCESSEUR BACS2
+       01 ZCOMS2.
+          05 ZNUMCPTD           PIC 9(2).
+          05 ZNUMCLID           PIC 9(2).
+          05 ZNOMCLID           PIC X(20).
+          05 ZMTTRAN            PIC S9(9)V9(9).
+          05 ZTEXTEOPE          PIC X(30).
+          05 ZREFMSG            PIC S9(4) COMP.
+
+      ******************************************************************
+      *                                                                *
+      *             P R O C E D U R E    D I V I S I O N               *
+      *                                                                *
+      ******************************************************************
+       PROCEDURE DIVISION USING ZCOMS2.
+
+      ******************************************************************
+      *                                                                *
+      *  TRAITEMENT PRINCIPAL : L.114 RECUPERATION INFORMATION BACS3   *
+      *                         L.141 ACTUALISATION DU SOLDE DU COMPTE *
+      *                         L.155 INSERTION DANS TABLE BAC_OPER    *
+      *                                                                *
+      ******************************************************************
+           PERFORM RECUP-INFO-TO-BACS3
+           PERFORM ACTU-SOLD-COMPTE
+           PERFORM INSERT-TABLE-OPER
+           PERFORM FIN.
+
+       RECUP-INFO-TO-BACS3.
+      * RECUPERATION DES INFORMATIONS A ENVOYER A BACS3
+           MOVE 1 TO WS-NUMCPTD
+
+           EXEC SQL
+               SELECT CLI.TYPCLI,CLI.NUMCLI
+               INTO :HVCLI-TYPCLI,:HVCLI-NUMCLI
+               FROM API0.BAC_CLIENT CLI
+               JOIN API0.BAC_CPTCLI CPT
+               ON CLI.NUMCLI = CPT.NUMCLI
+               JOIN API0.BAC_COMPTE COM
+               ON CPT.NUMCPT = COM.NUMCPT
+               WHERE COM.NUMCPT = :WS-NUMCPTD
+           END-EXEC
+           PERFORM TEST-SQLCODE.
+
+           DISPLAY HVCLI-TYPCLI
+           DISPLAY HVCLI-NUMCLI
+           PERFORM TEST-SQLCODE
+           MOVE HVCLI-NUMCLI TO ZNUMCLI
+           DISPLAY ZMTTRAN
+           MOVE ZMTTRAN TO ZMTTRANS
+           MOVE HVCLI-TYPCLI TO ZTYPCLI
+           CALL 'BACS3' USING ZCOMS3
+           DISPLAY ZMTTRANS
+           MOVE ZMTTRANS TO WS-MTTRANS.
+
+       ACTU-SOLD-COMPTE.
+      * ACTUALISATION DU SOLDE DE LA TABLE BAC_COMPTE
+           DISPLAY ZMTTCOM
+           MOVE ZMTTCOM TO WS-MTTCOM
+           ADD WS-MTTCOM TO WS-MTTRANS
+           MOVE WS-MTTRANS TO WS-SOLDE0D
+           MOVE ZNUMCPTD TO HVCOM-NUMCPT
+           EXEC SQL
+               UPDATE API0.BAC_COMPTE SET
+               SOLDE0 = SOLDE0 - :WS-SOLDE0D
+               WHERE NUMCPT = :HVCOM-NUMCPT
+           END-EXEC
+           PERFORM TEST-SQLCODE
+           IF SQLCODE = ZEROES
+              ADD 1 TO CPT-COMPTE
+           END-IF
+           .
+
+       INSERT-TABLE-OPER.
+      * INSERTION DES NOUVELLES OPERATION DANS LA TABLE BAC_OPER
+
+      *    RECUPERATION DU NUMERO D'OPERATION MAX
+           EXEC SQL
+               SELECT MAX(NUMOPE)
+               INTO :HVO-NUMOPE
+               FROM API0.BAC_OPER
+           END-EXEC
+           PERFORM TEST-SQLCODE
+
+           DISPLAY HVO-NUMOPE
+           ADD 1 TO HVO-NUMOPE
+           MOVE ZTEXTEOPE(1:3) TO WS-APPEME
+           MOVE ZTEXTEOPE      TO WS-TEXTEOPE
+           MOVE ZMTTCOM        TO WS-MTTCOM
+           COMPUTE ZMTTRANS = ZMTTRANS * -1
+           MOVE ZMTTRANS       TO WS-MTTRANS
+           EXEC SQL
+               INSERT INTO API0.BAC_OPER VALUES
+               (:HVO-NUMOPE,
+                :HVCOM-NUMCPT,
+                :WS-APPEME,
+                :WS-TEXTEOPE,
+                :WS-MTTRANS,
+                :WS-MTTCOM,
+                DEFAULT)
+           END-EXEC
+           PERFORM TEST-SQLCODE
+           IF SQLCODE = ZEROES
+              ADD 1 TO CPT-OPER
+           END-IF
+           .
+
+      ******************************************************************
+      *                     TEST DU SQLCODE                            *
+      ******************************************************************
+       TEST-SQLCODE.
+           EVALUATE TRUE
+            WHEN SQLCODE = ZEROES
+                DISPLAY 'REQUETE OK ' SQLCODE
+            WHEN SQLCODE = +100
+                DISPLAY ' INCONNU EN TABLE' SQLCODE
+            WHEN OTHER
+                DISPLAY 'ERREUR SQLCODE : ' SQLCODE
+           END-EVALUATE.
+
+      ******************************************************************
+      *                     ETIQUETTE DE FIN                           *
+      ******************************************************************
+       FIN.
+           GOBACK.
+
+      *                                                 ////
+      *                                                (OO)
+      *                                          -OOO--(__)--OOO-

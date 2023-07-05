@@ -1,0 +1,172 @@
+#********************************************************************************************************************#
+#  ÉNONCÉ : Écrire le programme principal EXOPP qui appelle le sous-programme EXOSP. Ce sous-programme recherche     #
+#           dans un tableau de 5 postes le nom à partir d'un code renseigné par le programme appelant. Si le code    #
+#           est trouvé dans la table, le sous-programme retourne le code retour 0 ainsi que le nom sinon il          #
+#           retourne le code retour 1 au programme appelant.                                                         #
+#********************************************************************************************************************#
+
+#PREMIER PROGRAMME COMMUNICATION AVEC SOUS-PROGRAMME
+
+Soit le tableau comprenant :
+01 TAB.
+    05 PIC X(11) VALUE '1JEAN'.
+    05 PIC X(11) VALUE '2JEANNE'.
+    05 PIC X(11) VALUE '3NOEMIE'.
+    05 PIC X(11) VALUE '4CORNELIUS'.
+    05 PIC X(11) VALUE '5ALBERTINE'.
+01 REDEFINES TAB.
+    05 POSTE OCCURS 5.
+      10 COD PIC X.
+      10 NOM PIC X(10).
+
+Soit une zone de communication comprenant :
+01 ZCOM.
+    05 ZCODE PIC X.
+    05 ZCDRET PIC 9.
+      88 ZCDRET-OK             VALUE ZERO.
+      88 ZCDRET-NON-TROUVE     VALUE 1.
+    05 ZNOM PIC X(10).
+
+
+
+
+#*******************************************************************#
+#                            PROGRAMME                              #
+#*******************************************************************#
+
+CBL DYNAM
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. EXOPP.
+       AUTHOR. OTEUR.
+       DATE-WRITTEN. 14/03/2023.
+      ******************************************************************
+      *  FONCTION DU PROGRAMME :  PROGRAMME APPELANT                   *
+      *  230327 : CREATION DU PROGRAMME                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       DATA DIVISION.
+
+       WORKING-STORAGE SECTION.
+       01 ZCOM.
+          05 ZCODE PIC X.
+          05 ZCDRET PIC 9.
+              88 ZCDRET-OK             VALUE ZERO.
+              88 ZCDRET-NON-TROUVE     VALUE 1.
+          05 ZNOM PIC X(10).
+       
+       PROCEDURE DIVISION.
+      * 1ER APPEL AVEC CODE INCONNU
+           INITIALIZE ZCOM
+           MOVE 'A'    TO ZCODE
+           PERFORM APPEL-EXOSP
+
+      * 2EME APPEL AVEC CODE CONNU
+           INITIALIZE ZCOM
+           MOVE '3'    TO ZCODE
+           PERFORM APPEL-EXOSP
+
+           STOP RUN
+           .
+
+       APPEL-EXOSP.
+           DISPLAY 'ZCODE : ' ZCODE
+           CALL 'EXOSP' USING ZCOM
+           EVALUATE TRUE
+                WHEN ZCDRET-OK
+                     DISPLAY 'CODE TROUVE, NOM : ' ZNOM
+                WHEN ZCDRET-NON-TROUVE
+                     DISPLAY 'CODE NON TROUVE'
+           END-EVALUATE
+           .
+
+
+
+#*******************************************************************#
+#                          SOUS PROGRAMME                           #
+#*******************************************************************#
+
+     IDENTIFICATION DIVISION.
+       PROGRAM-ID. EXOSP.
+       AUTHOR. OTEUR.
+       DATE-WRITTEN. 14/03/2023.
+      ******************************************************************
+      *  FONCTION DU SOUS-PROGRAMME: contrôle du numéro de département *
+      *  230327 : CREATION DU PROGRAMME                                *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      * TABLEAU DES NOMS
+       01  TAB.
+           05             PIC X(11) VALUE '1JEAN'.
+           05             PIC X(11) VALUE '2JEANNE'.
+           05             PIC X(11) VALUE '3NOEMIE'.
+           05             PIC X(11) VALUE '4CORNELIUS'.
+           05             PIC X(11) VALUE '5ALBERTINE'.
+       01  REDEFINES TAB.
+           05 POSTE OCCURS 5.
+              10 COD      PIC X.
+              10 NOM      PIC X(10).
+
+      * INDICE DE BALAYAGE
+       01  I              PIC 9 VALUE ZEROES.
+      * DECLARER LA ZONE DE COMMUNICATION EN LINKAGE
+       LINKAGE SECTION.
+       01  ZCOM.
+           05 ZCODE       PIC X.
+           05 ZCDRET      PIC 9.
+              88 ZCDRET-OK         VALUE ZERO.
+              88 ZCDRET-NON-TROUVE VALUE 1.
+           05 ZNOM        PIC X(10).
+       PROCEDURE DIVISION USING ZCOM.
+      * POSITIONNEMENT A NON TROUVE
+           SET ZCDRET-NON-TROUVE TO TRUE
+      * RECHERCHE DANS LE TABLEAU
+      * SI LE CODE EST TROUVE ON RETOURNE LE NOM
+           PERFORM VARYING I FROM 1 BY 1 UNTIL I > 6 OR ZCDRET-OK
+              IF ZCODE = COD(I)
+                 SET ZCDRET-OK TO TRUE
+                 MOVE NOM(I) TO ZNOM
+              END-IF
+           END-PERFORM
+
+           GOBACK
+           .
+
+
+
+#*******************************************************************#
+#                         JCL D'EXECUTION                           #
+#*******************************************************************#
+
+//API8PP   JOB 'SDJ FORMATION',MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,
+//   NOTIFY=&SYSUID,COND=(4,LT),TIME=(,3),RESTART=*
+//*
+//* BIBLIOTHEQUE DES LOAD MODULES
+//JOBLIB   DD DSN=API8.COBOL.LOAD,DISP=SHR
+//         DD DSN=CEE.SCEERUN,DISP=SHR
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API8.SOURCE.COBOL(EXOSP)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//LKED.SYSLMOD DD   DSN=API8.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME EXOSP(R)
+//*
+//APPEL        EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD   DISP=SHR,DSN=API8.SOURCE.COBOL(EXOPP)
+//COBOL.SYSLIB DD   DISP=SHR,DSN=CEE.SCEESAMP
+//LKED.SYSLMOD DD   DSN=API8.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN   DD   *
+ NAME EXOPP(R)
+//*
+//* EXECUTION DU PROGRAMME
+//STEP2        EXEC PGM=EXOPP
+//SYSOUT       DD   SYSOUT=*
+//

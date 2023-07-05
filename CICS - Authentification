@@ -1,0 +1,237 @@
+#MAP pour authentification avec USERID et PASSWORD
+
+*
+* MAP POUR AUTHENTIFICATION
+*
+        PRINT NOGEN
+SIGNON  DFHMSD TYPE=&SYSPARM,MODE=INOUT,LANG=COBOL,                    X
+               CTRL=(FREEKB,FRSET),STORAGE=AUTO,TIOAPFX=YES
+SIGNON  DFHMDI COLUMN=1,LINE=1,SIZE=(24,80),MAPATTS=(COLOR,HILIGHT),   X
+               DSATTS=(COLOR,HILIGHT),CURSLOC=YES
+        DFHMDF POS=(3,20),                                             X
+               ATTRB=ASKIP,LENGTH=40,                                  X
+               INITIAL='VEUILLEZ TAPER VOTRE IDENTIFIANT ET MOT DE PASSX
+               E'
+        DFHMDF POS=(6,15),                                             X
+               ATTRB=ASKIP,LENGTH=10,                                  X
+               INITIAL='USERID   :'
+USERID  DFHMDF POS=(6,26),                                             X
+               ATTRB=(UNPROT,IC,FSET),LENGTH=8
+        DFHMDF POS=(6,35),ATTRB=ASKIP,LENGTH=0
+        DFHMDF POS=(9,15),                                             X
+               ATTRB=ASKIP,LENGTH=10,                                  X
+               INITIAL='PASSWORD :'
+PASSWD  DFHMDF POS=(9,26),                                             X
+               ATTRB=(UNPROT,FSET),LENGTH=8
+        DFHMDF POS=(9,35),ATTRB=ASKIP,LENGTH=0
+MESS    DFHMDF POS=(23,1),                                             X
+               ATTRB=ASKIP,LENGTH=79
+        DFHMDF POS=(24,1),                                             X
+               ATTRB=ASKIP,LENGTH=79,COLOR=GREEN,                      X
+               INITIAL='PF12 - FIN           ENTER - VALIDATION'
+        DFHMSD TYPE=FINAL
+        END
+
+
+PROGRAMME :
+      *======================================================*
+      *   I D E N T I F I C A T I O N     D I V I S I O N    *
+      *======================================================*
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PSIGNON.
+
+      *======================================================*
+      *           D A T A         D I V I S I O N            *
+      *======================================================*
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+
+      *------------------------------------------------------*
+      *   DESCRIPTION DETAILLEE DE LA ZONE DE COMMUNICATION  *
+      *------------------------------------------------------*
+
+       01  WS-COMMAREA.
+           05 PROG-PRECEDENT      PIC X(8).
+           05 PROG-COURANT        PIC X(8).
+           05 PROG-SUIVANT        PIC X(8).
+           05 FILLER              PIC X(40).
+
+       01 C-R                     PIC S9(8) COMP.
+
+       01 MON-PROG                PIC X(8) VALUE 'PSIGNON '.
+       01 MA-MAP                  PIC X(8) VALUE 'SIGNON  '.
+       01 MON-MAPSET              PIC X(8) VALUE 'SIGNON  '.
+       01 MA-TRX                  PIC X(4) VALUE 'PSON'.
+
+      *------------------------------------------------------*
+      *   DESCRIPTION   DE   LA   MAP                        *
+      *------------------------------------------------------*
+       COPY SIGNON.
+
+      *------------------------------------------------------*
+      *   ZONE DE MESSAGE TAMPON POUR LE SEND FROM           *
+      *------------------------------------------------------*
+       01  MESSAGE-TXT            PIC X(79).
+
+      *------------------------------------------------------*
+      *   DESCRIPTION   DES  TOUCHES   FONCTIONS             *
+      *------------------------------------------------------*
+       COPY DFHAID.
+
+      *------------------------------------------------------*
+      *   DESCRIPTION   DES  ATTRIBUTS                       *
+      *------------------------------------------------------*
+       COPY DFHBMSCA.
+
+      *======================================================*
+      *          L I N K A G E     S E C T I O N             *
+      *======================================================*
+       LINKAGE SECTION.
+
+       01  DFHCOMMAREA.
+           05 LK-COMMAREA            PIC X(64).
+
+      *======================================================*
+      *     P R O C E D U R E     D I V I S I O N            *
+      *======================================================*
+       PROCEDURE DIVISION.
+
+       00000-INIT-PROGRAMME.
+      *---------------------*
+            PERFORM  10000-DEBUT-PROGRAMME
+            PERFORM  20000-TRAIT-PROGRAMME
+
+            GOBACK.
+
+       10000-DEBUT-PROGRAMME.
+      *---------------------*
+      *   TEST DE PREMIERE ENTREE DANS LE PROGRAMME
+
+           IF EIBCALEN = 0
+              INITIALIZE      WS-COMMAREA
+           ELSE
+              MOVE LK-COMMAREA  TO WS-COMMAREA
+           END-IF
+
+           MOVE  PROG-COURANT     TO  PROG-PRECEDENT
+           MOVE  MON-PROG         TO  PROG-COURANT
+           .
+
+       20000-TRAIT-PROGRAMME.
+      *---------------------*
+           MOVE LOW-VALUE TO SIGNONO
+           MOVE -1 TO USERIDL
+
+           IF PROG-PRECEDENT  NOT =  PROG-COURANT
+              PERFORM  22000-TRAIT-ENVOI
+           ELSE
+              PERFORM  23000-TRAIT-RECEPTION
+           END-IF
+           .
+
+       22000-TRAIT-ENVOI.
+      *-----------------*
+           EXEC CICS SEND MAP    (MA-MAP)
+                          FROM   (SIGNONO)
+                          MAPSET (MON-MAPSET)
+                          RESP   (C-R)
+                          CURSOR
+                          ERASE
+           END-EXEC
+
+           MOVE PROG-COURANT TO PROG-SUIVANT
+
+           EXEC CICS RETURN TRANSID  (MA-TRX)
+                            COMMAREA (WS-COMMAREA)
+                            LENGTH   (LENGTH OF WS-COMMAREA)
+           END-EXEC
+           .
+
+       23000-TRAIT-RECEPTION.
+      *---------------------*
+           EVALUATE EIBAID
+              WHEN DFHENTER
+                   PERFORM  23100-TRAIT-ENTER
+              WHEN DFHPF12
+                   PERFORM  23200-TRAIT-FIN
+              WHEN OTHER
+                   PERFORM  90000-ERR-TOUCHE
+           END-EVALUATE
+           .
+
+       23110-PROG-SUIVANT.
+      *------------------*
+           EXEC CICS XCTL  PROGRAM  (PROG-SUIVANT)
+                           COMMAREA (WS-COMMAREA)
+                           LENGTH   (LENGTH OF WS-COMMAREA)
+           END-EXEC
+           .
+
+       23100-TRAIT-ENTER.
+      *------------------*
+           EXEC CICS RECEIVE MAP   (MA-MAP)
+                             INTO  (SIGNONI)
+                             MAPSET(MON-MAPSET)
+                             RESP  (C-R)
+           END-EXEC
+
+           EVALUATE C-R
+              WHEN DFHRESP(NORMAL)
+              WHEN DFHRESP(MAPFAIL)
+                   CONTINUE
+              WHEN OTHER
+                   PERFORM 91000-ERREUR-CICS
+           END-EVALUATE
+
+           IF USERIDI NOT = 'IBMUSER'
+             MOVE 'USERID INVALIDE' TO MESSO
+             MOVE -1 TO USERIDL
+             PERFORM 22000-TRAIT-ENVOI
+           ELSE
+              IF PASSWDI NOT = 'IBMUSER'
+                 MOVE 'MOT DE PASSE INVALIDE' TO MESSO
+                 MOVE -1 TO PASSWDL
+                 PERFORM 22000-TRAIT-ENVOI
+              END-IF
+           END-IF
+
+      ****   EXEC CICS ASSIGN
+      ****       USERID(USERIDO)
+      ****   END-EXEC
+
+           IF USERIDI = 'IBMUSER' AND PASSWDI = 'IBMUSER'
+             MOVE 'VOUS POUVEZ TRAVAILLER' TO MESSO
+             PERFORM 22000-TRAIT-ENVOI
+      **     MOVE 'INF0CIF' TO PROG-SUIVANT
+      **     PERFORM 23110-PROG-SUIVANT
+           END-IF
+           .
+
+       23200-TRAIT-FIN.
+      *---------------*
+           MOVE 'FIN DE LA TRANSACTION' TO MESSAGE-TXT
+           PERFORM   99000-FIN-CICS
+           .
+
+       90000-ERR-TOUCHE.
+      *----------------*
+           MOVE 'TOUCHE DE FONCTION INVALIDE' TO MESSO
+           PERFORM  22000-TRAIT-ENVOI
+           .
+
+       91000-ERREUR-CICS.
+      *-------------------*
+           MOVE 'ERREUR CICS !!!  FIN DE LA TRANSACTION' TO MESSAGE-TXT
+           PERFORM   99000-FIN-CICS
+           .
+
+       99000-FIN-CICS.
+      *--------------*
+           EXEC CICS SEND FROM   (MESSAGE-TXT)
+                          LENGTH (LENGTH OF MESSAGE-TXT)
+                          ERASE
+           END-EXEC
+
+           EXEC CICS RETURN END-EXEC
+           .
+

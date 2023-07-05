@@ -1,0 +1,125 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. SPDAT.
+       AUTHOR. TEAMDHS.
+       DATE-WRITTEN. 05/06/2023.
+      ******************************************************************
+      *  FONCTION DU SOUS-PROGRAMME: CONTROLE ET FORMATAGE D'UNE DATE  *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      * DESCRIPTION DE LA TABLE DES MOIS
+       01  TAB-MOIS.
+           05                 PIC X(11) VALUE '31JANVIER'.
+           05                 PIC X(11) VALUE '28FEVRIER'.
+           05                 PIC X(11) VALUE '31MARS'.
+           05                 PIC X(11) VALUE '30AVRIL'.
+           05                 PIC X(11) VALUE '31MAI'.
+           05                 PIC X(11) VALUE '30JUIN'.
+           05                 PIC X(11) VALUE '31JUILLET'.
+           05                 PIC X(11) VALUE '31AOUT'.
+           05                 PIC X(11) VALUE '30SEPTEMBRE'.
+           05                 PIC X(11) VALUE '31OCTOBRE'.
+           05                 PIC X(11) VALUE '30NOVEMBRE'.
+           05                 PIC X(11) VALUE '31DECEMBRE'.
+       01  REDEFINES TAB-MOIS.
+           05 POSTE OCCURS 12.
+              10 NB-JOURS     PIC 99.
+              10 LIB-MOIS     PIC X(9).
+
+      * ZONES POUR CALCUL ANNEE BISSEXTILE
+       01  QUOTIENT           PIC 9(4)  VALUE ZEROES.
+       01  RESTE              PIC 9(4)  VALUE ZEROES.
+
+       LINKAGE SECTION.
+      * DESCRIPTION DE LA ZONE DE COMMUNICATION AVEC LE PROGRAMME
+      * APPELANT
+       01  ZCOM.
+           05 ZDATE.
+              10 ZANNEE       PIC 9(4).
+              10 ZMOIS        PIC 9(2).
+              10 ZJOUR        PIC 9(2).
+           05 ZCDRET          PIC 9.
+              88 ZCDRET-OK    VALUE 0.
+              88 ZCDRET-KO    VALUE 1.
+           05 ZDATE-EDIT      PIC X(17).
+
+       PROCEDURE DIVISION USING ZCOM.
+           PERFORM CONTROLE-DATE
+           IF ZCDRET-OK
+              PERFORM FORMATAGE-DATE
+           END-IF
+
+           PERFORM FIN
+           .
+       CONTROLE-DATE.
+           SET ZCDRET-KO TO TRUE
+
+      * CONTROLE DE NUMERICITE DE LA DATE
+           IF ZDATE NOT NUMERIC
+              PERFORM FIN
+           END-IF
+
+      * CONTROLE DU MOIS
+           IF ZMOIS < 1 OR > 12
+              PERFORM FIN
+           END-IF
+
+      * CONTROLE NB JOURS FEVRIER
+           IF ZMOIS = 2
+              PERFORM ALIM-NB-JOURS-FEVRIER
+           END-IF
+
+      * CONTROLE DU JOUR DANS LA TABLE SELON LE MOIS SAISI QUI
+      * CORRESPOND AU NUMERO DU POSTE DANS LA TABLE
+           IF ZJOUR < 1 OR > NB-JOURS(ZMOIS)
+              PERFORM FIN
+           END-IF
+
+      * SI PAS D'ERREUR METTRE 0 DANS CODE RETOUR
+           SET ZCDRET-OK TO TRUE
+           .
+
+       ALIM-NB-JOURS-FEVRIER.
+      * - LES ANNEES DIVISIBLES PAR 400 SONT BISSEXTILES
+      * - LES CENTENAIRES NE SONT PAS BISSEXTILES
+      * - LES ANNEES DIVISIBLES PAR 4 SONT BISSEXTILES
+      *    DIVIDE ZANNEE BY 4 GIVING QUOTIENT REMAINDER RESTE
+
+           IF FUNCTION REM(ZANNEE, 400) = ZEROES
+              ADD 1 TO NB-JOURS(2)
+              DISPLAY '       ' ZANNEE ' BISSEXTILE'
+           ELSE
+              IF FUNCTION REM(ZANNEE, 100) = ZEROES
+                 DISPLAY '       ' ZANNEE ' NON BISSEXTILE'
+              ELSE
+                 IF FUNCTION REM(ZANNEE, 4) = ZEROES
+                    ADD 1 TO NB-JOURS(2)
+                    DISPLAY '       ' ZANNEE ' BISSEXTILE'
+                 ELSE
+                    DISPLAY '       ' ZANNEE ' NON BISSEXTILE'
+                 END-IF
+              END-IF
+           END-IF
+           .
+
+
+       FORMATAGE-DATE.
+           STRING ZJOUR           DELIMITED BY SIZE
+                  SPACES          DELIMITED BY SIZE
+                  LIB-MOIS(ZMOIS) DELIMITED BY SPACES
+                  SPACES          DELIMITED BY SIZE
+                  ZANNEE          DELIMITED BY SIZE
+           INTO ZDATE-EDIT
+           .
+
+       FIN.
+           GOBACK
+           .
+
+      *                                                 ////
+      *                                                (OO)
+      *                                          -OOO--(__)--OOO-
