@@ -3,23 +3,9 @@
 #           des supports de l'information.                                                                          #
 #*******************************************************************************************************************#
 
-PROGRAMME PRINCIPAL : PROJ2 - ACCESSEUR : ACCESS2
+#PROGRAMME PRINCIPAL : PROJ2 - ACCESSEUR : ACCESS2
 
-#Définition et intérêt d'un accesseur : Module d'accès aux ressources physiques. Il contient les ordres d'accès aux informations stockées
-sur disque. Les programmes devant accéder à ces ressources doivent le faire via ces accesseurs, aucun ordre ne doit être codé dans les
-programmes principaux, ceux-ci sont chargés du traitement fonctionnel et les accesseurs se chargent de l'aspect physique, soit de la
-récupération ou de la mise à jour des informations. Les accesseurs sont des sous-programmes couramment utilisés en entreprise.
-
-#Fonctions principales : Il s'agit ici de développer un programme principal qui appelle l'accesseur afin de tester les fonctions principales
-à savoir : lecture d'une ligne de table DB2, création d'une ligne, modification d'une ligne, suppression d'une ligne, ouverture d'un
-curseur de liste, lecture de la ligne suivante dans le curseur, fermeture du curseur.
-Le curseur est déclaré dans l'accesseur pour lire les employés ordonnés sur le matricule.
-
-Cinématique : Le programme principal ne contient aucun ordre d'entrée sortie, dès qu'il doit le faire il fait appel à l'accesseur
-en renseignant les informations nécessaires dans une zone de communication commune avec l'accesseur, ci-dessous la description de la
-zone de communication et les alimentations des variables selon la fonction demandée par le programme principal :
-
-Description de la zone de communication :
+#Description de la zone de communication :
   01 ZACCESSEUR.
 * Valeurs possible : 'L' (lecture), 'C' (création), 'M' (modification), 'S' (suppression),
 * 'O' (ouverture du curseur), 'Q' (lecture séquentielle du curseur), 'F' (fermeture du curseur)
