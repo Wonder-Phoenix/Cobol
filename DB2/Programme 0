@@ -1,16 +1,16 @@
 #*******************************************************************************************************************#
 #  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P0 qui lit et affiche toutes les         #
 #           colonnes de l'employé ayant le matricule '10'. Puis lecture et affichage de tous les employés de la     #
-#           table EMPLOYE triés sur le NOM. Dans un second temps, remplacer les display par un fichier d'édition.   #
+#           table EMPLOYE triés sur le NOM. Dans un second temps, remplacer les displays par un fichier d'édition.  #
 #*******************************************************************************************************************#
 
 # Programme DB2P0 + JCL + SYSOUT + EDITION
 
 Informations sur les membres appelés par INCLUDE :
-a) Issu du DCLGEN: API8.SOURCE.DCLGEN(EMPLOYE)
+a) Issu du DCLGEN: API7.SOURCE.DCLGEN(EMPLOYE)
 ******************************************************************
 * DCLGEN TABLE(EMPLOYE)                                          *
-*        LIBRARY(API8.SOURCE.DCLGEN(EMPLOYE))                    *
+*        LIBRARY(API7.SOURCE.DCLGEN(EMPLOYE))                    *
 *        ACTION(REPLACE)                                         *
 *        LANGUAGE(COBOL)                                         *
 *        STRUCTURE(EMPLOYE)                                      *
@@ -40,7 +40,7 @@ a) Issu du DCLGEN: API8.SOURCE.DCLGEN(EMPLOYE)
 * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 6       *
 ******************************************************************
 
-b) Host-variables utilisées dans le programme: API8.SOURCE.COPY(EMPLOYE2)
+b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
 ******************************************************************
 * COBOL DECLARATION FOR TABLE EMPLOYE                            *
 ******************************************************************
@@ -289,30 +289,30 @@ b) Host-variables utilisées dans le programme: API8.SOURCE.COPY(EMPLOYE2)
 #                         JCL D'EXECUTION                           #
 #*******************************************************************#
 
-//API8DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
+//API7DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
 //*
 //PROCLIB  JCLLIB ORDER=SDJ.FORM.PROCLIB
 //*
-//         SET SYSUID=API8
+//         SET SYSUID=API7
 //         NOMPGM:ESSAI
 //*
 //APPROC   EXEC COMPDB2
-//STEPDB2.SYSLIB   DD DSN=API8.SOURCE.DCLGEN,DISP=SHR
-//                 DD DSN=API8.SOURCE.COPY,DISP=SHR
-//STEPDB2.SYSIN    DD DSN=API8.SOURCE.DB2(ESSAI),DISP=SHR
-//STEPDB2.DBRMLIB DD DSN=API8.SOURCE.DBRMLIB(ESSAI),DISP=SHR
-//STEPLNK.SYSLMOD  DD DSN=API8.SOURCE.PGMLIB(ESSAI),DISP=SHR
+//STEPDB2.SYSLIB   DD DSN=API7.SOURCE.DCLGEN,DISP=SHR
+//                 DD DSN=API7.SOURCE.COPY,DISP=SHR
+//STEPDB2.SYSIN    DD DSN=API7.SOURCE.DB2(ESSAI),DISP=SHR
+//STEPDB2.DBRMLIB DD DSN=API7.SOURCE.DBRMLIB(ESSAI),DISP=SHR
+//STEPLNK.SYSLMOD  DD DSN=API7.SOURCE.PGMLIB(ESSAI),DISP=SHR
 //*
 //*--- ETAPE DE BIND --------------------------------------
 //*
 //BIND     EXEC PGM=IKJEFT01,COND=(4,LT)
 //*DBRMLIB  DD  DSN=&SYSUID..DB2.DBRMLIB,DISP=SHR
-//DBRMLIB  DD  DSN=API8.SOURCE.DBRMLIB,DISP=SHR
+//DBRMLIB  DD  DSN=API7.SOURCE.DBRMLIB,DISP=SHR
 //SYSTSPRT DD  SYSOUT=*,OUTLIM=25000
 //SYSTSIN  DD  *
   DSN SYSTEM (DSN1)
   BIND PLAN      (ESSAI) -
-       QUALIFIER (API8)     -
+       QUALIFIER (API7)     -
        ACTION    (REPLACE) -
        MEMBER    (ESSAI) -
        VALIDATE  (BIND)    -
@@ -325,12 +325,12 @@ b) Host-variables utilisées dans le programme: API8.SOURCE.COPY(EMPLOYE2)
 //DEL      EXEC PGM=IDCAMS
 //SYSPRINT DD   SYSOUT=*
 //SYSIN    DD   *
-  DELETE API8.EDITION
+  DELETE API7.EDITION
   SET MAXCC = 0
 //*
 //STEPRUN  EXEC PGM=IKJEFT01,COND=(4,LT)
-//STEPLIB  DD DSN=API8.SOURCE.PGMLIB,DISP=SHR
-//EDIT     DD  DSN=API8.EDITION,DISP=(,CATLG,DELETE),
+//STEPLIB  DD DSN=API7.SOURCE.PGMLIB,DISP=SHR
+//EDIT     DD  DSN=API7.EDITION,DISP=(,CATLG,DELETE),
 //         DCB=(DSORG=PS,RECFM=FB,LRECL=133),
 //         SPACE=(TRK,(1))
 //SYSOUT   DD  SYSOUT=*,OUTLIM=1000
