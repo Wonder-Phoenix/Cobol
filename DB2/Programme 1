@@ -1,7 +1,7 @@
 #********************************************************************************************************************#
 #  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P1 qui lit et affiche toutes les colonnes #
 #           du département numéro 'E10' puis lit et affiche de la même façon tous les départements de la table       #
-#           DEPARTEMENT triés sur le nom du département. Pour la liste des départements, remplacer les display par   #
+#           DEPARTEMENT triés sur le nom du département. Pour la liste des départements, remplacer les displays par  #
 #           l'édition suivante écrite dans un fichier d'édition et ajouter le nom du chef de département             #
 #********************************************************************************************************************#
 
@@ -53,7 +53,7 @@ P02  COMMER  BAT2  70
 
        IDENTIFICATION DIVISION.
        PROGRAM-ID. DB2P1.
-       AUTHOR. OTEUR.
+       AUTHOR. SV.
        DATE-WRITTEN. 29/03/2023.
       ******************************************************************
       *  FONCTION DU PROGRAMME: EDITION DES DEPARTEMENTS               *
@@ -264,30 +264,30 @@ P02  COMMER  BAT2  70
 #                         JCL D'EXECUTION                           #
 #*******************************************************************#
 
-//API8DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
+//API7DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
 //*
 //PROCLIB  JCLLIB ORDER=SDJ.FORM.PROCLIB
 //*
-//         SET SYSUID=API8
+//         SET SYSUID=API7
 //         NOMPGM:DB2P1
 //*
 //APPROC   EXEC COMPDB2
-//STEPDB2.SYSLIB   DD DSN=API8.SOURCE.DCLGEN,DISP=SHR
-//                 DD DSN=API8.SOURCE.COPY,DISP=SHR
-//STEPDB2.SYSIN    DD DSN=API8.SOURCE.DB2(DB2P1),DISP=SHR
-//STEPDB2.DBRMLIB DD DSN=API8.SOURCE.DBRMLIB(DB2P1),DISP=SHR
-//STEPLNK.SYSLMOD  DD DSN=API8.SOURCE.PGMLIB(DB2P1),DISP=SHR
+//STEPDB2.SYSLIB   DD DSN=API7.SOURCE.DCLGEN,DISP=SHR
+//                 DD DSN=API7.SOURCE.COPY,DISP=SHR
+//STEPDB2.SYSIN    DD DSN=API7.SOURCE.DB2(DB2P1),DISP=SHR
+//STEPDB2.DBRMLIB DD DSN=API7.SOURCE.DBRMLIB(DB2P1),DISP=SHR
+//STEPLNK.SYSLMOD  DD DSN=API7.SOURCE.PGMLIB(DB2P1),DISP=SHR
 //*
 //*--- ETAPE DE BIND --------------------------------------
 //*
 //BIND     EXEC PGM=IKJEFT01,COND=(4,LT)
 //*DBRMLIB  DD  DSN=&SYSUID..DB2.DBRMLIB,DISP=SHR
-//DBRMLIB  DD  DSN=API8.SOURCE.DBRMLIB,DISP=SHR
+//DBRMLIB  DD  DSN=API7.SOURCE.DBRMLIB,DISP=SHR
 //SYSTSPRT DD  SYSOUT=*,OUTLIM=25000
 //SYSTSIN  DD  *
   DSN SYSTEM (DSN1)
   BIND PLAN      (DB2P1) -
-       QUALIFIER (API8)     -
+       QUALIFIER (API7)     -
        ACTION    (REPLACE) -
        MEMBER    (DB2P1) -
        VALIDATE  (BIND)    -
@@ -300,13 +300,13 @@ P02  COMMER  BAT2  70
 //DEL      EXEC PGM=IDCAMS
 //SYSPRINT DD   SYSOUT=*
 //SYSIN    DD   *
-  DELETE API8.EDITION
+  DELETE API7.EDITION
   SET MAXCC = 0
 //*
 //* EXECUTION DU PROGRAMME
 //STEPRUN  EXEC PGM=IKJEFT01,COND=(4,LT)
-//STEPLIB  DD DSN=API8.SOURCE.PGMLIB,DISP=SHR
-//EDIT     DD  DSN=API8.EDITION,DISP=(,CATLG,DELETE),
+//STEPLIB  DD DSN=API7.SOURCE.PGMLIB,DISP=SHR
+//EDIT     DD  DSN=API7.EDITION,DISP=(,CATLG,DELETE),
 //         DCB=(DSORG=PS,RECFM=FB,LRECL=133),
 //         SPACE=(TRK,(1))
 //SYSOUT   DD  SYSOUT=*,OUTLIM=1000
