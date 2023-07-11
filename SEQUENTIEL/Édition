@@ -31,7 +31,7 @@ Longueur fixe : 80 caractères
 
  IDENTIFICATION DIVISION.
  PROGRAM-ID. FEXO1.
- AUTHOR. OTEUR.
+ AUTHOR. SV.
  DATE-WRITTEN. 29/03/2023.
 *********************************************************************
 * FONCTION DU PROGRAMME : LECTURE DU FICHIER SEQUENTIEL DES ASSURÉS *
