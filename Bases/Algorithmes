@@ -4,7 +4,7 @@
 | EXERCICE |                         DESCRIPTION                      |   LIGNE  | JEU DE TEST |
 |----------|----------------------------------------------------------|----------|-------------|
 |    1.6   | Échange de valeurs entre deux variables                  |          |      /      |
-|    1.7   | Transfère de valeurs entre trois variables               |          |      /      |
+|    1.7   | Transfert de valeurs entre trois variables               |          |      /      |
 |    2.2   | Calcul du carré d'un nombre                              |          |      /      |
 |    2.3   | Affichage de salutation & du nom d'une personne          |          |      /      |
 |    2.4   | Calcul du prix TTC                                       |          |      /      |
@@ -17,7 +17,7 @@
 |    4.3   | Affichage de l'heure une minute/seconde plus tard        |          |     OUI     |
 |    4.4   | Calcul de la facturation de photocopies                  |          |     OUI     |
 |    4.5   | Calcul des impôts en fonction de règles basiques         |          |     OUI     |
-|    4.5   | Résultat d'éléctions                                     |          |     OUI     |
+|    4.5   | Résultat d'élections                                     |          |     OUI     |
 |    4.8   | Date valide                                              |          |     OUI     |
 |  5.3;5.4 | Affichage des dix nombres suivants                       |          |     OUI     |
 |    5.5   | Table de multiplication d'un nombre                      |          |      /      |
@@ -29,10 +29,9 @@
 |    6.10  | Création tableau provenant de la somme de deux éléments  |          |      /      |
 |    6.11  | Multiplication d'éléments de tableau                     |          |     OUI     |
 
+
 ----------------------------------------------------------------------------------------------------------------------------------
-
-
-#Exercice 1.6 : Écrire un algorithme permettant d’échanger les valeurs de deux variables A et B, et ce quel que soit leur contenu préalable.
+#Exercice 1.6 : Écrire un algorithme permettant d’échanger les valeurs de deux variables A et B, et ce, quel que soit leur contenu préalable.
 #Exemple : A vaut 1, B vaut 2. En fin de traitement, A doit valoir 2 et B doit valoir 1
 
 Solution n°1 :
@@ -54,8 +53,8 @@ B ← A – B
 A ← A – B
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 1.7 : Écrire un algorithme transférant à B la valeur de A, à C la valeur de B et à A la valeur de C
 #(toujours quels que soient les contenus préalables de ces variables).
 
@@ -83,9 +82,10 @@ B ← C – (B + A)
 C ← C – (B + A)
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 2.2 : Écrire un programme qui demande un nombre à l’utilisateur, puis qui calcule et affiche le carré de ce nombre.
+
 NBRE     entier
 CARRE    entier
 Début
@@ -95,9 +95,10 @@ CARRE ← NBRE * NBRE
 Écrire « son carré est : » CARRE
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 2.3 : Écrire un programme qui demande son prénom à l'utilisateur, et qui lui réponde par un charmant « Bonjour » suivi du prénom
+
 PRENOM   alphanumérique
 Début
 Écrire « quel est ton prénom : »
@@ -105,10 +106,11 @@ Lire PRENOM
 Écrire « Bonjour, » PRENOM « ! »
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 2.4 : Écrire un programme qui lit le prix HT d’un article, le nombre d’articles et le taux de TVA, et qui fournit le prix
 #total TTC correspondant. Faire en sorte que des libellés apparaissent clairement.
+
 NOMBRE           entier
 PRIX-HT          numérique
 TAUX-TVA         numérique
@@ -124,10 +126,11 @@ PRIX-TTC ← NOMBRE * PRIX-HT * (1 + TAUX-TVA / 100)
 Écrire « Prix total TTC : » PRIX-TOTAL-TTC
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 3.2 : Écrire un algorithme qui demande deux nombres à l’utilisateur et l’informe ensuite si leur produit est négatif ou
-#positif (on laisse de côté le cas où le produit est nul). Attention toutefois : on ne doit pas calculer le produit des deux nombres.
+#positif (on laisse de côté le cas où le produit est nul).
+
 N1     entier signé
 N2     entier signé
 Début
@@ -135,17 +138,18 @@ Début
 Lire N1
 Écrire « Entrer un second nombre : »
 Lire N2
-Si (N1>0etN2>0)ou(N1<0etN2<0)
+Si (N1 > 0 et N2 > 0) ou (N1 < 0 et N2 < 0)
   écrire « le produit est positif »
 sinon
   écrire « le produit est négatif »
 finsi
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 3.3 : Écrire un algorithme qui demande trois noms à l’utilisateur et l’informe ensuite s’ils sont rangés ou non dans
 #l’ordre alphabétique.
+
 NOM1   alphabétique
 NOM2   alphabétique
 NOM3   alphabétique
@@ -163,10 +167,11 @@ sinon
 finsi
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 3.4 : Écrire un algorithme qui demande un nombre à l’utilisateur, et l’informe ensuite si ce nombre est positif ou
 #négatif (on inclut cette fois le traitement du cas où le nombre vaut zéro).
+
 NBR     entier signé
 Début
 Écrire « Entrer un nombre : »
@@ -182,11 +187,11 @@ sinon
 finsi
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 3.5 : Écrire un algorithme qui demande deux nombres à l’utilisateur et l’informe ensuite si le produit est négatif ou
-#positif (on inclut cette fois le traitement du cas où le produit peut être nul). Attention toutefois, on ne doit pas calculer
-#le produit !
+#positif (on inclut cette fois le traitement du cas où le produit peut être nul).
+
 N1     entier signé
 N2     entier signé
 Début
@@ -205,10 +210,11 @@ sinon
 finsi
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 3.6 : Écrire un algorithme qui demande l’âge d’un enfant à l’utilisateur. Ensuite, il l’informe de sa catégorie :
 #"Poussin" de 6 à 7 ans ; "Pupille" de 8 à 9 ans ; "Minime" de 10 à 11 ans ; "Cadet" après 12 ans
+
 AGE     entier
 Début
 Écrire « Entrer l'âge : »
@@ -232,7 +238,7 @@ E)          sinon
    finsi
 Fin
 
-Jeu de test : Conditions testées par l'ordinateur selon l'âge
+#Jeu de test : Conditions testées par l'ordinateur selon l'âge
 AGE = 1  ; Condition = A,B,C,D,E
 AGE = 6  ; Condition = A,B,C,D
 AGE = 7  ; Condition = A,B,C,D
@@ -245,8 +251,8 @@ AGE = 13 ; Condition = A
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 4.1 : Formulez un algorithme équivalent à l’algorithme suivant :
+
 Si Tutu > Toto + 4 OU Tata = "OK" Alors
     Tutu ← Tutu + 1
 Sinon
@@ -261,7 +267,7 @@ sinon
 finsi
 Fin
 
-Jeu de test : Conditions testées par l'ordinateur selon les valeurs de TUTU, TOTO et TATA
+#Jeu de test : Conditions testées par l'ordinateur selon les valeurs de TUTU, TOTO et TATA
 
 |                   |      A      |   B  |      |
 | Condition testée  | TUTU ; TOTO | TATA | TUTU |
@@ -273,9 +279,8 @@ Jeu de test : Conditions testées par l'ordinateur selon les valeurs de TUTU, TO
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 4.3 : De même que le précédent, cet algorithme doit demander une heure et en afficher une autre. Mais cette fois,
-#il doit gérer également les secondes, et afficher l'heure qu'il sera une seconde plus tard.
+#il dois gérer également les secondes, et afficher l'heure qu'il sera une seconde plus tard.
 #NB : là encore, on suppose que l'utilisateur entre une date valide.
 
 HEURE entier
@@ -303,7 +308,7 @@ finsi
 Écrire « Dans une minute il sera » HEURE « h » MINUTE « mn » SECONDE « s »
 Fin
 
-Jeu de test :
+#Jeu de test :
 
 | HEURE(S) | MINUTE(S) | SECONDE(S) | HEURE(S) | MINUTE(S) | SECONDE(S) |
 |----------|-----------|------------|----------|-----------|------------|
@@ -318,7 +323,6 @@ Jeu de test :
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 4.4 : Un magasin de reprographie facture 0,10 E les dix premières photocopies, 0,09 E les vingt suivantes et 0,08 E au-delà.
 #Écrivez un algorithme qui demande à l’utilisateur le nombre de photocopies effectuées et qui affiche la facture correspondante.
 
@@ -339,7 +343,7 @@ finsi
 Écrire « le prix est : » PRIX
 Fin
 
-Jeu de test :
+#Jeu de test :
 
 |  NBRE  |  PRIX  |
 |--------|--------|
@@ -349,7 +353,6 @@ Jeu de test :
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 4.5 : Les habitants de Zorglub paient l’impôt selon les règles suivantes :
 # • les hommes de plus de 20 ans paient l’impôt
 # • les femmes paient l’impôt si elles ont entre 18 et 35 ans
@@ -370,7 +373,7 @@ sinon
 finsi
 fin
 
-Jeu de test :
+#Jeu de test :
 
 |  SEXE  |  AGE  | IMPOSABLE ? |
 |--------|-------|-------------|
@@ -382,7 +385,6 @@ Jeu de test :
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 4.6 : Écriture d'un algorithme qui permet la saisie des scores de quatre candidats au premier tour des élections.
 #Il traitera ensuite le candidat numéro 1 (et uniquement lui) pour dire s'il est élu, battu, ballotage favorable ou défavorable
 #Règle suivante pour les élections :
@@ -416,7 +418,7 @@ sinon
 finsi
 Fin
 
-Jeu de test :
+#Jeu de test :
 
 | SCORE1 | SCORE2 | SCORE3 | SCORE4 |                RESULTAT              |
 |--------|--------|--------|--------|--------------------------------------|
@@ -428,7 +430,6 @@ Jeu de test :
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 4.8 : Écrivez un algorithme qui après avoir demandé un numéro de jour, de mois et d'année à l'utilisateur, renvoie s'il
 #s'agit ou non d'une date valide.
 
@@ -472,7 +473,7 @@ sinon
 finsi
 Fin
 
-Jeu de test :
+#Jeu de test :
 
 | JOUR | MOIS | ANNEE |  RESULTAT ATTENDU  |        RESULTAT          |
 |------|------|-------|--------------------|--------------------------|
@@ -490,10 +491,10 @@ Jeu de test :
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 5.3 et 5.4 : Écrire un algorithme qui demande un nombre de départ, et qui ensuite affiche les dix nombres suivants.
 #Par exemple, si l'utilisateur entre le nombre 17, le programme affichera les nombres de 18 à 27.
 #Utilisation de l'instruction TANT QUE
+
 N       entier
 CPT     entier
 Début
@@ -519,7 +520,8 @@ Pour CPT de 1 à 10
 CPT suivant
 Fin
 
-Jeu de test :
+#Jeu de test :
+
 |    N    |         RESULTAT ATTENDU        |            RESULTAT             |
 |---------|---------------------------------|---------------------------------|
 |    0    |       1 2 3 4 5 6 7 8 9 10      |       1 2 3 4 5 6 7 8 9 10      |
@@ -527,8 +529,8 @@ Jeu de test :
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 5.5 : Écrire un algorithme qui demande un nombre de départ, et qui ensuite écrit la table de multiplication de ce nombre
+
 NB     entier
 I     entier
 Début
@@ -540,10 +542,11 @@ Pour I de 1 à 10
 I suivant
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 5.6 : Écrire un algorithme qui demande un nombre de départ, et qui calcule la somme des entiers jusqu’à ce nombre.
 #NB : on souhaite afficher uniquement le résultat, pas la décomposition du calcul.
+
 X       entier
 N       entier
 SOMME   entier
@@ -559,8 +562,8 @@ Fin
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 5.7 : Écrire un algorithme qui demande un nombre de départ, et qui calcule sa factorielle.
+
 X         entier
 N         entier
 PRODUIT   entier
@@ -576,10 +579,10 @@ Fin
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
-#Exercice 5.10 : Lire la suite des prix (en euros entiers et terminée par zéro) des achats d’un client. Calculer la somme qu’il doit,
+#Exercice 5.10 : Lire la suite des prix (en euros entiers et terminés par zéro) des achats d’un client. Calculer la somme qu’il doit,
 #lire la somme qu’il paye, et simuler la remise de la monnaie en affichant les textes "10 Euros", "5 Euros" et "1 Euro" autant de
 #fois qu’il y a de coupures de chaque sorte à rendre.
+
 PRIX       entier
 SOMME      entier
 PAYE       entier
@@ -623,7 +626,7 @@ fin tant que
 Écrire « merci pour vos achats et à bientôt chez ALGO »
 fin
 
-Jeu de test :
+#Jeu de test :
 
 | PRIX | SOMME | PAYE |        RENDU         |
 |------|-------|------|----------------------|
@@ -633,10 +636,9 @@ Jeu de test :
 |   1  |   18  |  25  |       5 + 1 + 1      |    
 
 
-
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 6.1 : Écrire un algorithme qui déclare et remplisse un tableau de 7 valeurs numériques en les mettant toutes à zéro.
+
 Tableau tab[6]     numérique
 I                  entier
 Début
@@ -648,9 +650,9 @@ Fin
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 6.8 : Écrivez un algorithme permettant à l’utilisateur de saisir 10 valeurs positives ou négatives.
-Enfin, une fois la saisie terminée, le programme affichera le nombre de valeurs négatives et le nombre de valeurs positives.
+#Enfin, une fois la saisie terminée, le programme affichera le nombre de valeurs négatives et le nombre de valeurs positives.
+
 Tableau VAL[9]       entier signé
 I                    entier
 CPT1                 entier
@@ -673,9 +675,9 @@ Fin
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
 #Exercice 6.10 : Écrivez un algorithme constituant un tableau, à partir de deux tableaux de même longueur préalablement saisis.
 #Le nouveau tableau sera la somme des éléments des deux tableaux de départ.
+
 Tableau VAL1[7]      entier
 Tableau VAL2[7]      entier
 Tableau VAL3[7]      entier
@@ -693,9 +695,10 @@ pour I de 0 à 7 pas 2
 I suivant
 Fin
 
-----------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------
 #Exercice 6.11 : Écrivez un algorithme qui multiplie chaque élément du tableau 1 par chaque élément du tableau 2, et additionner le tout.
+
 Tableau VAL1[3]      entier
 Tableau VAL2[1]      entier
 TOTAL                entier
@@ -711,7 +714,7 @@ I suivant
 Écrire « Résultat : » TOTAL
 Fin
 
-Jeu de test :
+#Jeu de test :
 
 | I | VAL[I] | J | VAL[J] |  TOTAL  |
 |---|--------|---|--------|---------|
