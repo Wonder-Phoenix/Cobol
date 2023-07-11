@@ -1005,29 +1005,29 @@ DSNE610I NUMBER OF ROWS DISPLAYED IS 4
 #                         JCL D'EXECUTION                           #
 #*******************************************************************#
 
-//API8DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H,TIME=(,5)                
+//API7DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H,TIME=(,5)                
 //*                                                                     
 //PROCLIB  JCLLIB ORDER=SDJ.FORM.PROCLIB                                
 //*                                                                     
-//         SET SYSUID=API8,                                             
+//         SET SYSUID=API7,                                             
 //             NOMPGM=DB2P4                                             
 //*                                                                     
 //APPROC   EXEC COMPDB2                                                 
-//STEPDB2.SYSLIB   DD DSN=API8.SOURCE.DCLGEN,DISP=SHR                   
-//STEPDB2.SYSIN    DD DSN=API8.SOURCE.DB2(DB2P4),DISP=SHR               
-//STEPDB2.DBRMLIB  DD DSN=API8.SOURCE.DBRMLIB(DB2P4),DISP=SHR           
-//STEPCOB.SYSLIB   DD DSN=API8.SOURCE.COPY,DISP=SHR                     
-//STEPLNK.SYSLMOD  DD DSN=API8.SOURCE.PGMLIB(DB2P4),DISP=SHR            
+//STEPDB2.SYSLIB   DD DSN=API7.SOURCE.DCLGEN,DISP=SHR                   
+//STEPDB2.SYSIN    DD DSN=API7.SOURCE.DB2(DB2P4),DISP=SHR               
+//STEPDB2.DBRMLIB  DD DSN=API7.SOURCE.DBRMLIB(DB2P4),DISP=SHR           
+//STEPCOB.SYSLIB   DD DSN=API7.SOURCE.COPY,DISP=SHR                     
+//STEPLNK.SYSLMOD  DD DSN=API7.SOURCE.PGMLIB(DB2P4),DISP=SHR            
 //*                                                                     
 //*--- ETAPE DE BIND --------------------------------------             
 //*                                                                     
 //BIND     EXEC PGM=IKJEFT01,COND=(4,LT)                                
-//DBRMLIB  DD  DSN=API8.SOURCE.DBRMLIB,DISP=SHR                         
+//DBRMLIB  DD  DSN=API7.SOURCE.DBRMLIB,DISP=SHR                         
 //SYSTSPRT DD  SYSOUT=*,OUTLIM=25000                                    
 //SYSTSIN  DD  *                                                        
   DSN SYSTEM (DSN1)                                                     
   BIND PLAN      (DB2P4)   -                                            
-       QUALIFIER (API8)    -                                            
+       QUALIFIER (API7)    -                                            
        ACTION    (REPLACE) -                                            
        MEMBER    (DB2P4)   -                                            
        VALIDATE  (BIND)    -                                            
@@ -1040,15 +1040,15 @@ DSNE610I NUMBER OF ROWS DISPLAYED IS 4
 //STEP1    EXEC PGM=IDCAMS,COND=(4,LT)                                  
 //SYSPRINT DD SYSOUT=*                                                  
 //SYSIN    DD *                                                         
- DELETE API8.COB.MVTVAL.BASE.EMPLOYE                                    
+ DELETE API7.COB.MVTVAL.BASE.EMPLOYE                                    
  SET MAXCC = 0                                                          
 //*                                                                     
 //* EXECUTION DU PROGRAMME                                              
 //STEPRUN  EXEC PGM=IKJEFT01,COND=(4,LT)                                
-//STEPLIB  DD DSN=API8.SOURCE.PGMLIB,DISP=SHR                           
+//STEPLIB  DD DSN=API7.SOURCE.PGMLIB,DISP=SHR                           
 //         DD DSN=API0.COBOL.LOAD,DISP=SHR                              
 //MVT      DD DSN=API0.COB.MVT.BASE.EMPLOYE,DISP=SHR                    
-//MVTVAL   DD DSN=API8.COB.MVTVAL.BASE.EMPLOYE,DISP=(,CATLG,DELETE),    
+//MVTVAL   DD DSN=API7.COB.MVTVAL.BASE.EMPLOYE,DISP=(,CATLG,DELETE),    
 //         LIKE=API0.COB.MVT.BASE.EMPLOYE                               
 //SYSOUT   DD  SYSOUT=*,OUTLIM=1000                                     
 //SYSTSPRT DD  SYSOUT=*,OUTLIM=2500                                     
