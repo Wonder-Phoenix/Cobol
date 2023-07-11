@@ -64,7 +64,7 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
 
        IDENTIFICATION DIVISION.
        PROGRAM-ID. ESSAI.
-       AUTHOR. OTEUR.
+       AUTHOR. SV.
        DATE-WRITTEN. 29/03/2023.
       ******************************************************************
       *  FONCTION DU PROGRAMME: LECTURE D'UN EMPLOYE ET                *
