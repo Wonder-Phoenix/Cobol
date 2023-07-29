@@ -4,7 +4,7 @@
 
      
 Bonjour à tous,  
-Ci-dessous le récapitulatifs des programmes que j'ai développés durant ma formation "Développeur(se) Grands Systèmes Cobol" en 2023.  
+Ci-dessous le récapitulatif des programmes que j'ai développés durant ma formation "Développeur(se) Grands Systèmes Cobol" en 2023.  
 Bonne lecture !
 
 [Installation d'un compilateur COBOL sur Mac ici !](https://www.geeksforgeeks.org/how-to-install-cobol-on-macos/)
