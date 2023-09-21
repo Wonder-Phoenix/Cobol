@@ -1,11 +1,11 @@
 
       *********************************************************************************************************************#
-#  ÉNONCÉ : Exemples de fonction COBOL : MODULO ; REMAINDER ; CURRENT DATE ; RANDOM ; MAX, MIN                       #
-#********************************************************************************************************************#
+      *  ÉNONCÉ : Exemples de fonction COBOL : MODULO ; REMAINDER ; CURRENT DATE ; RANDOM ; MAX, MIN                       #
+      *********************************************************************************************************************#
 
-#*******************************************************************#
-#                            PROGRAMME                              #
-#*******************************************************************#
+      ********************************************************************#
+      *                            PROGRAMME                              #
+      ********************************************************************#
 
         IDENTIFICATION DIVISION.
                PROGRAM-ID. EXO10.
@@ -42,17 +42,17 @@
          01  WS-POSTE-MIN       PIC X(5)  VALUE SPACES.
 
         PROCEDURE DIVISION.
-              *FONCTION MODULO
+      *FONCTION MODULO
              COMPUTE RESTE = FUNCTION MOD(2023, 4)
              DISPLAY 'COMPUTE RESTE = FUNCTION MOD(2023, 4)'
                      ' ---> ' RESTE
 
-              *FONCTION REMAINDER
+      *FONCTION REMAINDER
              COMPUTE RESTE = FUNCTION REM(2023, 4)
              DISPLAY 'COMPUTE RESTE = FUNCTION REM(2023, 4)'
                      ' ---> ' RESTE
 
-              *FONCTION CURRENT DATE
+      *FONCTION CURRENT DATE
              MOVE FUNCTION CURRENT-DATE TO WS-DATE
              STRING DATE-JOUR(7 : 2)  DELIMITED BY SIZE
                     '/'               DELIMITED BY SIZE
@@ -64,14 +64,14 @@
                      ' ---> DATE-JOUR : ' DATE-JOUR-ED
                      ', HEURE : '     HEURE
 
-              *FONCTION RANDOM
+      *FONCTION RANDOM
              PERFORM VARYING I FROM 1 BY 1 UNTIL I > 10
                COMPUTE WS-RANDOM = FUNCTION RANDOM(I) * 1000
                DISPLAY 'COMPUTE WS-RANDOM = FUNCTION RANDOM'
                        ' ---> ' RESTE
              END-PERFORM
 
-              *FONCTION MAX, MIN
+      *FONCTION MAX, MIN
              MOVE FUNCTION MAX(POSTE(ALL)) TO WS-POSTE-MAX
              DISPLAY 'MOVE FUNCTION MAX(POSTE(ALL)) TO WS-POSTE-MAX'
                      ' ---> ' WS-POSTE-MAX
@@ -84,9 +84,9 @@
 
 
 
-#*******************************************************************#
-#                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
-#*******************************************************************#
+      ********************************************************************#
+      *                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
+      ********************************************************************#
 
 COMPUTE RESTE = FUNCTION MOD(2023, 4) ---> 3
 COMPUTE RESTE = FUNCTION REM(2023, 4) ---> 3
