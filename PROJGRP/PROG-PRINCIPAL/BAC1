@@ -1,48 +1,28 @@
    CBL DYNAM
-       IDENTIFICATION DIVISION.
-       PROGRAM-ID. BAC1.
-       AUTHOR. SV.
-       DATE-WRITTEN. 07/06/23.
-      ******************************************************************
-      *            P R O J E T    D E    G R O U P E                   *
-      *              Q U I    F O N C T I O N N E !                    *
-      *                                                                *
-      *                           /^^\                                 *
-      *                        ///    \\\                              *
-      *                     ///          \\\                           *
-      *                   ///      |D       \\\                        *
-      *                ///    BAC  |D   VIR    \\\                     *
-      *               |___________________________|                    *
-      *               |___________________________|                    *
-      *                |###|      |###|      |###|                     *
-      *                 | |        | |        | |                      *
-      *                 | |        | |        | |                      *
-      *                 | |        | |        | |                      *
-      *                #####      #####      #####                     *
-      *              __|___|______|___|______|___|                     *
-      *            -----------------------------------                 *
-      *          ------------HERVE-------SV-------------               *
-      *                                                                *
-      ******************************************************************
-       ENVIRONMENT DIVISION.
-       CONFIGURATION SECTION.
-       SPECIAL-NAMES.
-           DECIMAL-POINT IS COMMA.
-       INPUT-OUTPUT SECTION.
-       FILE-CONTROL.
-      * DECLARATION DU FICHIER D'EDITION
-           SELECT BACMVT ASSIGN TO BACMVT
-              ORGANIZATION IS SEQUENTIAL
-              ACCESS MODE IS SEQUENTIAL
-              FILE STATUS IS FS-BACMVT.
+   IDENTIFICATION DIVISION.
+   PROGRAM-ID. BAC1.
+   AUTHOR. SV.
+   DATE-WRITTEN. 07/06/23.
 
-       DATA DIVISION.
+   ENVIRONMENT DIVISION.
+   CONFIGURATION SECTION.
+   SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+   INPUT-OUTPUT SECTION.
+   FILE-CONTROL.
+      * DECLARATION DU FICHIER D'EDITION
+      SELECT BACMVT ASSIGN TO BACMVT
+            ORGANIZATION IS SEQUENTIAL
+            ACCESS MODE IS SEQUENTIAL
+            FILE STATUS IS FS-BACMVT.
+
+   DATA DIVISION.
       * DECLARATION DU BUFFER
-       FILE SECTION.
+   FILE SECTION.
        FD BACMVT RECORDING MODE IS F.
        01 ENR-BACMVT            PIC X(100).
 
-       WORKING-STORAGE SECTION.
+   WORKING-STORAGE SECTION.
 
       * FILE STATUS
        01 FS-BACMVT             PIC 99.
@@ -192,7 +172,7 @@
       *          P R O C E D U R E   D I V I S I O N               *
       *                                                            *
       **************************************************************
-       PROCEDURE DIVISION.
+   PROCEDURE DIVISION.
            PERFORM DEBUT
            PERFORM UNTIL FIN-FICH
                SET OK TO TRUE
@@ -234,11 +214,12 @@
                  WHEN OTHER
                            DISPLAY POSTE-ERR(2)
                 END-EVALUATE
-           DISPLAY WS-BACMVT
-           PERFORM READ-BACMVT
-           END-PERFORM
-           PERFORM FIN
-           .
+
+   DISPLAY WS-BACMVT
+   PERFORM READ-BACMVT
+   END-PERFORM
+   PERFORM FIN
+   .
 
       **************************************************************
       *                                                            *
@@ -249,7 +230,8 @@
       **************************************************************
 
       * CREATION DU CLIENT DANS TABLE BAC_CLIENT
-       CREA-CLI.
+
+   CREA-CLI.
            MOVE WS-NUMCLI     TO WS-NUMCLI-COMP
            MOVE WS-TYPCLI     TO WS-TYPCLI-COMP
            MOVE WS-STATUT     TO WS-STATUT-COMP
@@ -287,11 +269,10 @@
               DISPLAY 'ERR INSERT CLIENT, SQLCODE : ' ED-SQLCODE
               PERFORM FIN-ERREUR
            END-IF
-           .
-
+   .
 
       * CREATION DU COMPTE DANS TABLE BAC_COMPTE
-       CREA-COM.
+   CREA-COM.
            MOVE WS-NUMCPT TO WS-NUMCPT-COMP
            MOVE 'O'       TO WS-STATUT-COMP
            MOVE WS-SOLDE0 TO WS-SOLDE0-COMP
@@ -346,11 +327,10 @@
               DISPLAY 'ERR INSERT CPTCLI, SQLCODE : ' ED-SQLCODE
               PERFORM FIN-ERREUR
            END-IF
-           .
-
+   .
 
       * MODIFICATION DU CLIENT DANS TABLE BAC_CLIENT
-       MOD-CLI.
+   MOD-CLI.
            MOVE WS-DATENT TO DATE8
            MOVE ANNEE     TO ANNEE10
            MOVE MOIS      TO MOIS10
@@ -389,16 +369,16 @@
                    SOLDE0 = :WS-SOLDE0-COMP,
                    DATMAJ = :WS-DATMAJ
                 WHERE NUMCPT = :WS-NUMCPT-COMP
-            END-EXEC.
+            END-EXEC
+   .
 
       **************************************************************
       *                                                            *
       *          CONTROLE DES CHAMPS SELON CODE MOUVEMENT          *
       *                                                            *
       **************************************************************
-
       * CONTROL DE LA VALIDITE DES DONNEES D'ENTREE POUR CREATION CLIENT
-       CONTROLE-CREA-CLI.
+   CONTROLE-CREA-CLI.
            PERFORM NUMCLI-CONFORME
            PERFORM CLIENT-INEXISTANT
            PERFORM TYPCLI-CONFORME
@@ -408,7 +388,7 @@
            PERFORM CDPOST-NUMERIQUE.
 
       * CONTROL DE LA VALIDITE DES DONNEES D'ENTREE POUR CREATION COMPTE
-       CONTROLE-CREA-COM.
+   CONTROLE-CREA-COM.
            PERFORM NUMCLI-CONFORME
            PERFORM CLIENT-EXISTANT
            PERFORM NUMCPT-CONFORME
@@ -417,7 +397,7 @@
            PERFORM SOLDE0-CONFORME.
 
       * CONTROL DE LA VALIDITE DES DONNEES D'ENTREE POUR MODIFICATION
-       CONTROL-MOD-CLI.
+   CONTROL-MOD-CLI.
            PERFORM NUMCLI-CONFORME
            PERFORM CLIENT-EXISTANT
            PERFORM TYPCLI-CONFORME
@@ -439,7 +419,7 @@
       *                                                            *
       **************************************************************
 
-       TYPCLI-CONFORME.
+   TYPCLI-CONFORME.
       * TYPE DE CLIENT (TYPCLI) OBLIGATOIRE + DOIT ETRE EGAL
       * A 'E' (ENTREPRISE) OU 'P' (PARTICULIER)
            IF WS-TYPCLI = SPACES
@@ -449,9 +429,10 @@
            IF NOT (WS-TYPCLI = 'E' OR WS-TYPCLI = 'P')
               DISPLAY POSTE-ERR(22)
               SET ERREUR TO TRUE
-           END-IF.
+           END-IF
+   .
 
-       STATUT-CONFORME.
+   STATUT-CONFORME.
       * STATUT DU CLIENT (STATUT) OBLIGATOIRE + DOIT ETRE EGAL
       * A 'C' (CLIENT) OU 'P' (PROSPECT)
            IF WS-STATUT = SPACES
@@ -461,30 +442,33 @@
            IF NOT (WS-STATUT  = 'C' OR WS-STATUT  = 'P')
               DISPLAY POSTE-ERR(8)
               SET ERREUR TO TRUE
-           END-IF.
-
-       NOM000-OBLIGATOIRE.
+           END-IF
+   .
+   NOM000-OBLIGATOIRE.
       * NOM DU CLIENT (NOM000) OBLIGATOIRE
            IF WS-NOM000 = SPACES
               DISPLAY POSTE-ERR(9)
               SET ERREUR TO TRUE
-           END-IF.
+           END-IF
+   .
 
-       PRENOM-OBLIGATOIRE.
+   PRENOM-OBLIGATOIRE.
       * SI TYPCLI = 'P' - PRENOM DU CLIENT OBLIGATOIRE
            IF WS-PRENOM = SPACES AND WS-TYPCLI = 'P'
               DISPLAY POSTE-ERR(10)
               SET ERREUR TO TRUE
-           END-IF.
+           END-IF
+   .
 
-       CDPOST-NUMERIQUE.
+   CDPOST-NUMERIQUE.
       * CODE POSTAL DE RESIDENCE (CDPOST) FACULTATIF + NUMERIQUE
            IF WS-CDPOST NOT NUMERIC
               DISPLAY POSTE-ERR(36)
               SET ERREUR TO TRUE
-           END-IF.
+           END-IF
+   .
 
-       DATENT-CONFORME.
+   DATENT-CONFORME.
       * DATE D'ENTREE (DATENT) FACULTATIF + COHERENTE AVEC LE SOUS
       * PROGRAMME SPDAT (APPEL)
            IF WS-DATENT NOT = ZEROES
@@ -494,9 +478,10 @@
                  DISPLAY POSTE-ERR(18)
                  SET ERREUR TO TRUE
               END-IF
-           END-IF.
+           END-IF
+   .
 
-       CLIENT-INEXISTANT.
+   CLIENT-INEXISTANT.
       * CLIENT NE DOIT PAS EXISTER EN TABLE DB2 API0.BAC_CLIENT
            MOVE WS-NUMCLI TO CONV-NUMCLI
            EXEC SQL
@@ -515,9 +500,10 @@
                MOVE SQLCODE TO ED-SQLCODE
                DISPLAY POSTE-ERR(25)
                SET ERREUR TO TRUE
-           END-EVALUATE.
+           END-EVALUATE
+   .
 
-       CLIENT-EXISTANT.
+   CLIENT-EXISTANT.
       * CLIENT DOIT EXISTER EN TABLE DB2 API0.BAC_CLIENT
            MOVE WS-NUMCLI TO CONV-NUMCLI
            EXEC SQL
@@ -536,9 +522,10 @@
                MOVE SQLCODE TO ED-SQLCODE
                DISPLAY POSTE-ERR(25)
                SET ERREUR TO TRUE
-           END-EVALUATE.
+           END-EVALUATE
+   .
 
-       NUMCLI-CONFORME.
+   NUMCLI-CONFORME.
       * NUMERO DE CLIENT (NUMCLI) OBLIGATOIRE + NUMERIQUE
            IF WS-NUMCLI = ZEROES
               DISPLAY POSTE-ERR(3)
@@ -547,9 +534,10 @@
            IF WS-NUMCLI NOT NUMERIC
               DISPLAY POSTE-ERR(4)
               SET ERREUR TO TRUE
-           END-IF.
+           END-IF
+   .
 
-       NUMCPT-CONFORME.
+   NUMCPT-CONFORME.
       * NUMERO DE COMPTE OBLIGATOIRE + NUMERIQUE
            IF WS-NUMCPT = ZEROES
               DISPLAY POSTE-ERR(15)
@@ -558,9 +546,10 @@
            IF WS-NUMCPT NOT NUMERIC
               DISPLAY POSTE-ERR(16)
               SET ERREUR TO TRUE
-           END-IF.
+           END-IF
+   .
 
-       COMPTE-EXISTANT.
+   COMPTE-EXISTANT.
       * NUMERO DE COMPTE NE DOIT PAS EXISTER EN TABLE API0.BAC_COMPTE
            MOVE WS-NUMCPT TO CONV-NUMCPT
            EXEC SQL
@@ -580,9 +569,9 @@
                DISPLAY POSTE-ERR(18)
                SET ERREUR TO TRUE
            END-EVALUATE
-           .
+   .
 
-       DATOUV-CONFORME.
+   DATOUV-CONFORME.
       * SI RENSEIGNEE, DOIT ETRE COHERENTE AVEC SOUS-PROGRAMME SPDAT
            IF WS-DATOUV NOT = SPACES
               MOVE WS-DATOUV TO ZDATE
@@ -592,15 +581,15 @@
                  SET ERREUR TO TRUE
               END-IF
            END-IF
-           .
+   .
 
-       SOLDE0-CONFORME.
+   SOLDE0-CONFORME.
       * SOLDE DU COMPTE NUMERIQUE
            IF WS-SOLDE0 NOT NUMERIC
               DISPLAY POSTE-ERR(22)
               SET ERREUR TO TRUE
            END-IF
-           .
+   .
 
       **************************************************************
       *                                                            *
@@ -609,7 +598,7 @@
       *                                                            *
       **************************************************************
 
-       DEBUT.
+   DEBUT.
            PERFORM OPEN-BACMVT
            PERFORM READ-BACMVT.
 
@@ -620,9 +609,10 @@
            IF FS-BACMVT NOT = ZEROES
               DISPLAY 'FS-BACMVT OPEN : ' FS-BACMVT
               PERFORM FIN-ERREUR
-           END-IF.
+           END-IF
+   .
 
-       READ-BACMVT.
+   READ-BACMVT.
       * LECTURE BACMVT
            READ BACMVT INTO WS-BACMVT
            AT END SET FIN-FICH TO TRUE
@@ -631,7 +621,8 @@
            IF FS-BACMVT NOT = ZEROES
               DISPLAY 'FS-BACMVT READ : ' FS-BACMVT
               PERFORM FIN-ERREUR
-           END-IF.
+           END-IF
+   .
 
       **************************************************************
       *                                                            *
@@ -639,14 +630,12 @@
       *                                                            *
       **************************************************************
 
-       FIN-ERREUR.
-           PERFORM FIN.
+   FIN-ERREUR.
+           PERFORM FIN
+   .
 
-       FIN.
+   FIN.
            CLOSE BACMVT
            DISPLAY 'NBRE LUS :' CPT-LUS
-           STOP RUN.
-
-      *                                                 ////
-      *                                                (OO)
-      *                                          -OOO--(__)--OOO-
+           STOP RUN
+   .
