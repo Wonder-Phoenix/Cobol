@@ -8,16 +8,16 @@
 
 Informations sur les membres appelés par INCLUDE :
 a) Issu du DCLGEN: API7.SOURCE.DCLGEN(EMPLOYE)
-******************************************************************
-* DCLGEN TABLE(EMPLOYE)                                          *
-*        LIBRARY(API7.SOURCE.DCLGEN(EMPLOYE))                    *
-*        ACTION(REPLACE)                                         *
-*        LANGUAGE(COBOL)                                         *
-*        STRUCTURE(EMPLOYE)                                      *
-*        QUOTE                                                   *
-*        DBCSDELIM(NO)                                           *
-* ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
-******************************************************************
+      ******************************************************************
+      * DCLGEN TABLE(EMPLOYE)                                          *
+      *        LIBRARY(API7.SOURCE.DCLGEN(EMPLOYE))                    *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        STRUCTURE(EMPLOYE)                                      *
+      *        QUOTE                                                   *
+      *        DBCSDELIM(NO)                                           *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
     EXEC SQL DECLARE EMPLOYE TABLE
     ( MAT                            CHAR(3) NOT NULL,
       NOM                            CHAR(7) NOT NULL,
@@ -26,9 +26,9 @@ a) Issu du DCLGEN: API7.SOURCE.DCLGEN(EMPLOYE)
       SAL                            DECIMAL(7, 2) NOT NULL,
       COM                            DECIMAL(7, 2)
     ) END-EXEC.
-******************************************************************
-* COBOL DECLARATION FOR TABLE EMPLOYE                            *
-******************************************************************
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE EMPLOYE                            *
+      ******************************************************************
   01  EMPLOYE.
       10 MAT                  PIC X(3).
       10 NOM                  PIC X(7).
@@ -36,14 +36,14 @@ a) Issu du DCLGEN: API7.SOURCE.DCLGEN(EMPLOYE)
       10 DAT                  PIC X(10).
       10 SAL                  PIC S9(5)V9(2) USAGE COMP-3.
       10 COM                  PIC S9(5)V9(2) USAGE COMP-3.
-******************************************************************
-* THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 6       *
-******************************************************************
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 6       *
+      ******************************************************************
 
-b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
-******************************************************************
-* COBOL DECLARATION FOR TABLE EMPLOYE                            *
-******************************************************************
+      *b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE EMPLOYE                            *
+      ******************************************************************
 01  HVE-EMPLOYE.
       10 HVE-MAT              PIC X(3).
       10 HVE-NOM              PIC X(7).
@@ -51,9 +51,9 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
       10 HVE-DAT              PIC X(10).
       10 HVE-SAL              PIC S9(5)V9(2) USAGE COMP-3.
       10 HVE-COM              PIC S9(5)V9(2) USAGE COMP-3.
-******************************************************************
-* THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 6       *
-******************************************************************
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 6       *
+      ******************************************************************
 
 
 
