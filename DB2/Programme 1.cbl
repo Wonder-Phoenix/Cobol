@@ -1,15 +1,15 @@
-#********************************************************************************************************************#
-#  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P1 qui lit et affiche toutes les colonnes #
-#           du département numéro 'E10' puis lit et affiche de la même façon tous les départements de la table       #
-#           DEPARTEMENT triés sur le nom du département. Pour la liste des départements, remplacer les displays par  #
-#           l'édition suivante écrite dans un fichier d'édition et ajouter le nom du chef de département             #
-#********************************************************************************************************************#
+      ********************************************************************************************************************#
+      *  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P1 qui lit et affiche toutes les colonnes #
+      *           du département numéro 'E10' puis lit et affiche de la même façon tous les départements de la table       #
+      *           DEPARTEMENT triés sur le nom du département. Pour la liste des départements, remplacer les displays par  #
+      *           l'édition suivante écrite dans un fichier d'édition et ajouter le nom du chef de département             #
+      *********************************************************************************************************************#
 
-# Programme DB2P1 + JCL + SYSOUT + EDITION
+      * Programme DB2P1 + JCL + SYSOUT + EDITION
 
-#*******************************************************************#
-#                           INFORMATIONS                            #
-#*******************************************************************#
+      ********************************************************************#
+      *                           INFORMATIONS                            #
+      ********************************************************************#
 
                             LISTE DES DEPARTEMENTS
                             ----------------------
@@ -47,9 +47,9 @@ P02  COMMER  BAT2  70
 
 
 
-#*******************************************************************#
-#                            PROGRAMME                              #
-#*******************************************************************#
+      ********************************************************************#
+      *                            PROGRAMME                              #
+      ********************************************************************#
 
        IDENTIFICATION DIVISION.
        PROGRAM-ID. DB2P1.
@@ -65,41 +65,41 @@ P02  COMMER  BAT2  70
            DECIMAL-POINT IS COMMA.
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
-      * DECLARATION DU FICHIER D'EDITION
+      *DECLARATION DU FICHIER D'EDITION
            SELECT EDIT ASSIGN TO EDIT
                   ORGANIZATION IS SEQUENTIAL
                   ACCESS MODE  IS SEQUENTIAL
                   FILE STATUS  IS FS-EDIT.
        DATA DIVISION.
-      * DECLARATION DU BUFFER
+      *DECLARATION DU BUFFER
        FILE SECTION.
        FD  EDIT RECORDING MODE IS F.
        01  ENR-EDIT.
-      * METTRE EN COMMENTAIRE LE CARACTERE DE SAUT SI ON UTILISE
-      * WRITE AFTER ADVANCING
+      *METTRE EN COMMENTAIRE LE CARACTERE DE SAUT SI ON UTILISE
+      *WRITE AFTER ADVANCING
            05 CAR-SAUT       PIC X.
            05 LIG-EDIT       PIC X(132).
        WORKING-STORAGE SECTION.
-      * FILE STATUS
+      *FILE STATUS
        01  FS-EDIT           PIC 99 VALUE ZEROES.
-      * DECLARATION DE LA TABLE DEPARTEMENT
+      *DECLARATION DE LA TABLE DEPARTEMENT
            EXEC SQL INCLUDE DEPT    END-EXEC.
-      * DECLARATION DE LA TABLE EMPLOYE
+      *DECLARATION DE LA TABLE EMPLOYE
            EXEC SQL INCLUDE EMPLOYE END-EXEC.
-      * DECLARATION DE LA SQLCA
+      *DECLARATION DE LA SQLCA
            EXEC SQL INCLUDE SQLCA   END-EXEC.
-      * DECLARATION DES HOST-VARIABLES DU DEPARTEMENT
+      *DECLARATION DES HOST-VARIABLES DU DEPARTEMENT
        01  HVD-DEPARTEMENT.
            05 HVD-NOD    PIC X(3).
            05 HVD-NDE    PIC X(6).
            05 HVD-LIE    PIC X(4).
            05 HVD-CHE    PIC X(3).
 
-      * DECLARATION DES HOST-VARIABLES DE L'EMPLOYE
+      *DECLARATION DES HOST-VARIABLES DE L'EMPLOYE
        01  HVE-EMPLOYE.
            05 HVE-NOD        PIC X(3).
            05 HVE-NOM        PIC X(7).
-      * DECLARATION DU CURSEUR POUR LA LISTE
+      *DECLARATION DU CURSEUR POUR LA LISTE
            EXEC SQL DECLARE LISTE CURSOR FOR
             SELECT
                   D.NOD,
@@ -114,7 +114,7 @@ P02  COMMER  BAT2  70
            END-EXEC.
 
 
-      * LIGNES EDITION
+      *LIGNES EDITION
        01  L1.
             05                      PIC X(30) VALUE SPACES.
             05                      PIC X(22) VALUE
@@ -156,13 +156,13 @@ P02  COMMER  BAT2  70
             05                      PIC X(03) VALUE SPACES.
             05 ED-NOM               PIC X(08) VALUE SPACES.
        
-      * SQLCODE AU FORMAT EDITION
+      *SQLCODE AU FORMAT EDITION
        01  ED-SQLCODE               PIC +(10) VALUE ZEROES.
 
-      * COMPTEUR
+      *COMPTEUR
        01  CPT-DEPT                 PIC 9     VALUE ZEROES.
 
-      * INDICATEUR DE FIN DE LISTE
+      *INDICATEUR DE FIN DE LISTE
        01                           PIC X     VALUE SPACES.
             88 FIN-LISTE                      VALUE '1'.
 
@@ -177,14 +177,14 @@ P02  COMMER  BAT2  70
            .
 
        DEBUT.
-      * OUVERTURE DU FICHIER D'EDITION
+      *OUVERTURE DU FICHIER D'EDITION
            OPEN OUTPUT EDIT
            IF FS-EDIT NOT = ZEROES
               DISPLAY 'ERREUR OPEN FICHIER EDIT, FS : ' FS-EDIT
               PERFORM FIN-ERREUR
            END-IF
 
-      * EDITION DE L'ENTETE
+      *EDITION DE L'ENTETE
            MOVE '1'      TO CAR-SAUT
            MOVE L1       TO LIG-EDIT
            WRITE ENR-EDIT
@@ -198,7 +198,7 @@ P02  COMMER  BAT2  70
            MOVE L4       TO LIG-EDIT
            WRITE ENR-EDIT 
 
-      * OUVERTURE DU CURSEUR
+      *OUVERTURE DU CURSEUR
            EXEC SQL OPEN LISTE END-EXEC
            IF SQLCODE NOT = ZEROES
               MOVE SQLCODE TO ED-SQLCODE
@@ -206,12 +206,12 @@ P02  COMMER  BAT2  70
               PERFORM FIN-ERREUR
            END-IF
 
-      * 1ER FETCH
+      *1ER FETCH
            PERFORM FETCH-LISTE
            .
 
        TRAITEMENT.
-      * EDITION D'UNE LIGNE DETAIL
+      *EDITION D'UNE LIGNE DETAIL
            MOVE ' '      TO CAR-SAUT
            MOVE HVD-NOD  TO ED-NOD
            MOVE HVD-NDE  TO ED-NDE
@@ -250,19 +250,19 @@ P02  COMMER  BAT2  70
            .  
 
       FIN.
-     * AFFICHAGE DES COMPTEURS
+      *AFFICHAGE DES COMPTEURS
            DISPLAY 'NB DEPARTEMENTS LUS : ' CPT-DEPT
-     * FERMETURE DES FICHIERS
+      *FERMETURE DES FICHIERS
            CLOSE EDIT
            EXEC SQL CLOSE LISTE END-EXEC
-     * ARRET DU PROGRAMME
+      *ARRET DU PROGRAMME
            STOP RUN
            .
 
 
-#*******************************************************************#
-#                         JCL D'EXECUTION                           #
-#*******************************************************************#
+      ********************************************************************#
+      *                         JCL D'EXECUTION                           #
+      ********************************************************************#
 
 //API7DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
 //*
@@ -317,16 +317,16 @@ P02  COMMER  BAT2  70
 //
 
 
-#*******************************************************************#
-#                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
-#*******************************************************************#
+      ********************************************************************#
+      *                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
+      ********************************************************************#
 NB DEPARTEMENTS LUS : 4
 
 
 
-#*******************************************************************#
-#                          FICHIER D'EDITION                        #
-#*******************************************************************#
+      ********************************************************************#
+      *                          FICHIER D'EDITION                        #
+      ********************************************************************#
 
 ********************************* Top of Data **********************************
 1                              LISTE DES DEPARTEMENTS
