@@ -1,10 +1,10 @@
-#*******************************************************************************************************************#
-#  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P0 qui lit et affiche toutes les         #
-#           colonnes de l'employé ayant le matricule '10'. Puis lecture et affichage de tous les employés de la     #
-#           table EMPLOYE triés sur le NOM. Dans un second temps, remplacer les displays par un fichier d'édition.  #
-#*******************************************************************************************************************#
+      ********************************************************************************************************************#
+      *  ÉNONCÉ : Dans la bibliothèque userid.SOURCE.DB2, écrire le programme DB2P0 qui lit et affiche toutes les         #
+      *           colonnes de l'employé ayant le matricule '10'. Puis lecture et affichage de tous les employés de la     #
+      *           table EMPLOYE triés sur le NOM. Dans un second temps, remplacer les displays par un fichier d'édition.  #
+      ********************************************************************************************************************#
 
-# Programme DB2P0 + JCL + SYSOUT + EDITION
+      * Programme DB2P0 + JCL + SYSOUT + EDITION
 
 Informations sur les membres appelés par INCLUDE :
 a) Issu du DCLGEN: API7.SOURCE.DCLGEN(EMPLOYE)
@@ -58,9 +58,9 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
 
 
 
-#*******************************************************************#
-#                            PROGRAMME                              #
-#*******************************************************************#
+      ********************************************************************#
+      *                            PROGRAMME                              #
+      ********************************************************************#
 
        IDENTIFICATION DIVISION.
        PROGRAM-ID. ESSAI.
@@ -77,36 +77,36 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
            DECIMAL-POINT IS COMMA.
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
-      * DECLARATION DU FICHIER D'EDITION
+      *DECLARATION DU FICHIER D'EDITION
            SELECT EDIT ASSIGN TO EDIT
                   ORGANIZATION IS SEQUENTIAL
                   ACCESS MODE  IS SEQUENTIAL
                   FILE STATUS  IS FS-EDIT.
        DATA DIVISION.
-      * DECLARATION DU BUFFER
+      *DECLARATION DU BUFFER
        FILE SECTION.
        FD  EDIT RECORDING MODE IS F.
        01  ENR-EDIT.
-      * METTRE EN COMMENTAIRE LE CARACTERE DE SAUT SI ON UTILISE
-      * WRITE AFTER ADVANCING
+      *METTRE EN COMMENTAIRE LE CARACTERE DE SAUT SI ON UTILISE
+      *WRITE AFTER ADVANCING
            05 CAR-SAUT       PIC X.
            05 LIG-EDIT       PIC X(132).
 
        WORKING-STORAGE SECTION.
-      * FILE STATUS
+      *FILE STATUS
        01  FS-EDIT           PIC 99 VALUE ZEROES.
 
-      * COPY DES DECLARATIONS DE LA TABLE EMPLOYE
+      *COPY DES DECLARATIONS DE LA TABLE EMPLOYE
            EXEC SQL INCLUDE EMPLOYE END-EXEC.
-      * COPY DES HOST VARIABLES DE LA TABLE EMPLOYE
+      *COPY DES HOST VARIABLES DE LA TABLE EMPLOYE
            EXEC SQL INCLUDE EMPLOYE2 END-EXEC.
-      * COPY DES ZONES UTILES A DB2
+      *COPY DES ZONES UTILES A DB2
            EXEC SQL INCLUDE SQLCA   END-EXEC.
 
        01  WS-MAT PIC X(3) VALUE SPACES.
 
-      * ECRITURE DE L'ORDRE POUR LISTER LA TABLE EMPLOYE
-      * UTILISATION D'UN CURSEUR CAR PLUSIEURS LIGNES
+      *ECRITURE DE L'ORDRE POUR LISTER LA TABLE EMPLOYE
+      *UTILISATION D'UN CURSEUR CAR PLUSIEURS LIGNES
            EXEC SQL DECLARE LISTE CURSOR FOR
             SELECT MAT,
                    NOM,
@@ -118,7 +118,7 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
             ORDER BY NOM
            END-EXEC
 
-      * LIGNES EDITION
+      *LIGNES EDITION
        01  L1.
             05                      PIC X(30) VALUE SPACES.
             05                      PIC X(18) VALUE 'LISTE DES EMPLOYES'.
@@ -166,7 +166,7 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
             05 ED-COM               PIC ZZ.ZZZ,ZZ VALUE ZEROES.
 
        PROCEDURE DIVISION.
-      * LECTURE D'UNE LIGNE DE LA TABLE EMPLOYE
+      *LECTURE D'UNE LIGNE DE LA TABLE EMPLOYE
              MOVE '10'     TO WS-MAT
              DISPLAY 'LECTURE DE L''EMPLOYE DE MATRICULE : ' WS-MAT
              EXEC SQL
@@ -189,7 +189,7 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
 
              DISPLAY 'SQLCODE : ' SQLCODE
 
-      * AFFICHAGE DES COLONNES SI SQLCODE = 0
+      *AFFICHAGE DES COLONNES SI SQLCODE = 0
              EVALUATE SQLCODE
               WHEN ZEROES
                 DISPLAY 'EMPLOYE : '
@@ -206,28 +206,28 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
                 PERFORM FIN
              END-EVALUATE
 
-      * OUVERTURE DU FICHIER D'EDITION
+      *OUVERTURE DU FICHIER D'EDITION
              OPEN OUTPUT EDIT
              IF FS-EDIT NOT = ZEROES
                 DISPLAY 'ERREUR OPEN EDIT, FS : ' FS-EDIT
                 PERFORM FIN
              END-IF
 
-      * ECRITURE DE L'ENTETE
-      * 1ERE FACON : AVEC GESTION AUTOMATIQUE DU CARACTERE DE SAUT
-      *    MOVE L1   TO LIG-EDIT
-      *    WRITE ENR-EDIT AFTER ADVANCING PAGE
-      *    MOVE L2   TO LIG-EDIT
-      *    WRITE ENR-EDIT AFTER ADVANCING 2 LINES
-      *    MOVE L3   TO LIG-EDIT
-      *    WRITE ENR-EDIT
-      *    MOVE L4   TO LIG-EDIT
-      *    WRITE ENR-EDIT
+      *ECRITURE DE L'ENTETE
+      *1ERE FACON : AVEC GESTION AUTOMATIQUE DU CARACTERE DE SAUT
+      *   MOVE L1   TO LIG-EDIT
+      *   WRITE ENR-EDIT AFTER ADVANCING PAGE
+      *   MOVE L2   TO LIG-EDIT
+      *   WRITE ENR-EDIT AFTER ADVANCING 2 LINES
+      *   MOVE L3   TO LIG-EDIT
+      *   WRITE ENR-EDIT
+      *   MOVE L4   TO LIG-EDIT
+      *   WRITE ENR-EDIT
 
-      * 2EME FACON: EN RENSEIGNANT LE CARACTERE DE SAUT
-      *   1 : SAUT DE PAGE
-      *   0 : SAUT DE LIGNE
-      *   BLANC : RETOUR CHARIOT
+      *2EME FACON: EN RENSEIGNANT LE CARACTERE DE SAUT
+      *  1 : SAUT DE PAGE
+      *  0 : SAUT DE LIGNE
+      *  BLANC : RETOUR CHARIOT
              MOVE '1'  TO CAR-SAUT
              MOVE L1   TO LIG-EDIT
              WRITE ENR-EDIT
@@ -241,18 +241,18 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
              MOVE L4   TO LIG-EDIT
              WRITE ENR-EDIT
 
-      * LECTURE DES EMPLOYES : UTILISATION DU CURSEUR
+      *LECTURE DES EMPLOYES : UTILISATION DU CURSEUR
              DISPLAY SPACES
              DISPLAY 'LECTURE DE TOUS LES EMPLOYES'
 
-      * --> 1- OUVERTURE DU CURSEUR (OPEN)
+      *--> 1- OUVERTURE DU CURSEUR (OPEN)
              EXEC SQL OPEN LISTE END-EXEC
              IF SQLCODE NOT = ZEROES
                 DISPLAY 'ERREUR OPEN LISTE : ' SQLCODE
                 PERFORM FIN
              END-IF
 
-      * --> 2- BOUCLE DE LECTURE DU CURSEUR (FETCH)
+      *--> 2- BOUCLE DE LECTURE DU CURSEUR (FETCH)
              PERFORM UNTIL SQLCODE = +100
                 EXEC SQL
                    FETCH LISTE
@@ -277,7 +277,7 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
                 END-IF
              END-PERFORM
 
-      * --> 3- FERMETURE DU CURSEUR (CLOSE)
+      *--> 3- FERMETURE DU CURSEUR (CLOSE)
              EXEC SQL CLOSE LISTE END-EXEC
              .
        FIN.
@@ -285,9 +285,9 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
 
 
 
-#*******************************************************************#
-#                         JCL D'EXECUTION                           #
-#*******************************************************************#
+      ********************************************************************#
+      *                         JCL D'EXECUTION                           #
+      ********************************************************************#
 
 //API7DB JOB NOTIFY=&SYSUID,CLASS=A,MSGCLASS=H
 //*
@@ -342,23 +342,23 @@ b) Host-variables utilisées dans le programme: API7.SOURCE.COPY(EMPLOYE2)
 
 
 
-#*******************************************************************#
-#                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
-#*******************************************************************#
+      ********************************************************************#
+      *                 SYSOUT : COMPTE-RENDU D'EXECUTION                 #
+      ********************************************************************#
 
-********************************* TOP OF DATA **********************************
+      ********************************** TOP OF DATA **********************************
 LECTURE DE L'EMPLOYE DE MATRICULE : 10
 SQLCODE : 000000000
 EMPLOYE : 10 , DURAND , E10, 2000-02-10, 1100000, 0500000
 
 LECTURE DE TOUS LES EMPLOYES 
-******************************** BOTTOM OF DATA ********************************
+      ********************************* BOTTOM OF DATA ********************************
 
 
 
-#*******************************************************************#
-#                          FICHIER D'EDITION                        #
-#*******************************************************************#
+      ********************************************************************#
+      *                          FICHIER D'EDITION                        #
+      ********************************************************************#
 1                              LISTE DES EMPLOYES
                                ------------------
 0MAT   NOM       NOD   DAT          SAL          COM
