@@ -1,43 +1,43 @@
-#*******************************************************************************************************************#
-#  ÉNONCÉ : Développement d'accesseurs aux tables DB2 de la base EMPLOYE afin de rendre les programmes indépendants #
-#           des supports de l'information.                                                                          #
-#*******************************************************************************************************************#
+      ********************************************************************************************************************#
+      *  ÉNONCÉ : Développement d'accesseurs aux tables DB2 de la base EMPLOYE afin de rendre les programmes indépendants #
+      *           des supports de l'information.                                                                          #
+      ********************************************************************************************************************#
 
-#PROGRAMME PRINCIPAL : PROJ2 - ACCESSEUR : ACCESS2
+      *PROGRAMME PRINCIPAL : PROJ2 - ACCESSEUR : ACCESS2
 
-#Description de la zone de communication :
-  01 ZACCESSEUR.
-* Valeurs possible : 'L' (lecture), 'C' (création), 'M' (modification), 'S' (suppression),
-* 'O' (ouverture du curseur), 'Q' (lecture séquentielle du curseur), 'F' (fermeture du curseur)
-      05 ZCODE-FONC     PIC X.
-      05 ZMAT           PIC X(3).
-      05 ZNOM           PIC X(7).
-      05 ZNOD           PIC X(3).
-      05 ZDAT           PIC 9(8).
-      05 ZSAL           PIC 9(5)V99.
-      05 ZCOM           PIC 9(5)V99.
-* LE ZCODE-RET CORRESPOND AU N° D'ERREUR (VOIR LA TABLE DES ERREURS)
-      05 ZCODE-RET      PIC 99.
-* LE ZLIBERR CORRESPOND AU LIBELLÉ DE L'ERREUR DANS LA TABLE DES ERREURS
-      05 ZLIBERR        PIC X(50).
-
-
-#*******************************************************************#
-#                            JEU DE TEST                            #
-#*******************************************************************#
-
-1) CREATION EMPLOYE MAT 100, NOM = MAGUY, N° DÉPARTEMENT : P01, DATE ENTRÉE : 20230515,
-   SALAIRE : 3000 - CODE RETOUR UNIQUE DE L'ACCESSEUR = 0  
-2) LECTURE EMPLOYE MAT 100 - ACCESSEUR RETOURNE LES INFORMATIONS DE MAGUY
-3) MODIFICATION MAT 100, SALAURE : 3500 ET COM : 500 - CODE RETOUR UNIQUE DE L'ACCESSEUR = 0
-4) LECTURE ALL EMPLOYES AVEC GESTION PAR CURSEUR - ZCODE-FONC = 'O', 'Q' et 'F'
-5) SUPPRESSION EMPLOYE MAT 100 - CODE RETOUR UNIQUE DE L'ACCESSEUR = 0  
-6) LECTURE EMPLOYE MAT 100 - CODE RETOUR DE L'ACCESSEUR = 11
+      *Description de la zone de communication :
+      *  01 ZACCESSEUR.
+      *Valeurs possible : 'L' (lecture), 'C' (création), 'M' (modification), 'S' (suppression),
+      *'O' (ouverture du curseur), 'Q' (lecture séquentielle du curseur), 'F' (fermeture du curseur)
+      *05 ZCODE-FONC     PIC X.
+      *05 ZMAT           PIC X(3).
+      *05 ZNOM           PIC X(7).
+      *05 ZNOD           PIC X(3).
+      *05 ZDAT           PIC 9(8).
+      *05 ZSAL           PIC 9(5)V99.
+      *05 ZCOM           PIC 9(5)V99.
+      *LE ZCODE-RET CORRESPOND AU N° D'ERREUR (VOIR LA TABLE DES ERREURS)
+      *05 ZCODE-RET      PIC 99.
+      *LE ZLIBERR CORRESPOND AU LIBELLÉ DE L'ERREUR DANS LA TABLE DES ERREURS
+      *05 ZLIBERR        PIC X(50).
 
 
-#*******************************************************************#
-#                         TABLE DES ERREURS                         #
-#*******************************************************************#
+      ********************************************************************#
+      *                            JEU DE TEST                            #
+      ********************************************************************#
+
+      *1) CREATION EMPLOYE MAT 100, NOM = MAGUY, N° DÉPARTEMENT : P01, DATE ENTRÉE : 20230515,
+      *SALAIRE : 3000 - CODE RETOUR UNIQUE DE L'ACCESSEUR = 0  
+      *2) LECTURE EMPLOYE MAT 100 - ACCESSEUR RETOURNE LES INFORMATIONS DE MAGUY
+      *3) MODIFICATION MAT 100, SALAURE : 3500 ET COM : 500 - CODE RETOUR UNIQUE DE L'ACCESSEUR = 0
+      *4) LECTURE ALL EMPLOYES AVEC GESTION PAR CURSEUR - ZCODE-FONC = 'O', 'Q' et 'F'
+      *5) SUPPRESSION EMPLOYE MAT 100 - CODE RETOUR UNIQUE DE L'ACCESSEUR = 0  
+      *6) LECTURE EMPLOYE MAT 100 - CODE RETOUR DE L'ACCESSEUR = 11
+
+
+      ********************************************************************#
+      *                         TABLE DES ERREURS                         #
+      ********************************************************************#
 Num   Libellé
  1    CODE FONCTION ERRONE
  2    CODE TABLE ERRONE
@@ -61,9 +61,9 @@ Num   Libellé
  20   PROBLEME SUR TABLE
         
 
-#*******************************************************************#
-#                        PROGRAMME PRINCIPAL                        #
-#*******************************************************************#
+      ********************************************************************#
+      *                        PROGRAMME PRINCIPAL                        #
+      ********************************************************************#
 
    CBL DYNAM
        IDENTIFICATION DIVISION.
@@ -80,11 +80,11 @@ Num   Libellé
            
        DATA DIVISION.
        WORKING-STORAGE SECTION.
-      * PICTURES D'EDITION
+      *PICTURES D'EDITION
        01  ED-ZSAL        PIC Z(5),ZZ.
        01  ED-ZCOM        PIC Z(5),ZZ.
        
-      * ZONE DE COMMUNICATION AVEC L'ACCESSEUR
+      *ZONE DE COMMUNICATION AVEC L'ACCESSEUR
        01 ZACCESSEUR.
           05 ZCODE-FONC     PIC X.
           05 ZMAT           PIC X(3).
@@ -96,7 +96,7 @@ Num   Libellé
           05 ZCODE-RET      PIC 99.
           05 ZLIBERR        PIC X(50).
           
-      * ZONE DE COMMUNICATION AVEC L'ACCESSEUR DE LA TABLE DEPARTEMENT
+      *ZONE DE COMMUNICATION AVEC L'ACCESSEUR DE LA TABLE DEPARTEMENT
         01 DACCESSEUR.
           05 DCODE-FONC     PIC X.
           05 DNOD           PIC X(3).
@@ -110,14 +110,13 @@ Num   Libellé
         01 ACCESS2A         PIC X(8)    VALUE 'ACCESS2A'.
     
  
-
         PROCEDURE DIVISION.
-      * LECTURE DE L'EMPLOYE MAT 10
+      *LECTURE DE L'EMPLOYE MAT 10
              INITIALIZE ZACCESSEUR
              MOVE '10'     TO ZMAT
              PERFORM LECTURE-EMPLOYE
              
-      * CREATION DE L'EMPLOYE MAT 100
+      *CREATION DE L'EMPLOYE MAT 100
              INITIALIZE ZACCESSEUR
              MOVE 'C'      TO ZCODE-FONC
              MOVE '100'    TO ZMAT
@@ -147,12 +146,12 @@ Num   Libellé
                 DISPLAY '--- LIBELLE ERR : '      ZLIBERR
              END-IF
              
-      * LECTURE DE L'EMPLOYE 100
+      *LECTURE DE L'EMPLOYE 100
              INITIALIZE ZACCESSEUR
              MOVE '100'    TO ZMAT
              PERFORM LECTURE-EMPLOYE
              
-      * MODIFICATION DE L'EMPLOYE MAT 100       
+      *MODIFICATION DE L'EMPLOYE MAT 100       
              INITIALIZE ZACCESSEUR
              MOVE 'm'      TO ZCODE-FONC
              MOVE '100'    TO ZMAT
@@ -183,13 +182,13 @@ Num   Libellé
                 DISPLAY '--- LIBELLE ERR : '      ZLIBERR
              END-IF
              
-      * LECTURE DE L'EMPLOYE 100
+      *LECTURE DE L'EMPLOYE 100
              INITIALIZE ZACCESSEUR
              MOVE '100'    TO ZMAT
              PERFORM LECTURE-EMPLOYE
              
-       * LISTE DES EMPLOYES
-       * OUVERTURE DU CURSEUR
+      *LISTE DES EMPLOYES
+      *OUVERTURE DU CURSEUR
              INITIALIZE ZACCESSEUR
              MOVE 'O'      TO ZCODE-FONC
              CALL ACCESS2 USING ZACCESSEUR
@@ -202,7 +201,7 @@ Num   Libellé
                 PERFORM FIN
              END-IF
              
-       * BOUCLE DE LECTURE
+      *BOUCLE DE LECTURE
              INITIALIZE ZACCESSEUR
              MOVE 'Q'      TO ZCODE-FONC
              CALL ACCESS2 USING ZACCESSEUR
@@ -225,7 +224,7 @@ Num   Libellé
                 CALL ACCESS2 USING ZACCESSEUR
              END-PERFORM   
                
-        * FERMETURE DU CURSEUR
+      *FERMETURE DU CURSEUR
              INITIALIZE ZACCESSEUR
              MOVE 'F'      TO ZCODE-FONC
              CALL ACCESS2 USING ZACCESSEUR
@@ -237,7 +236,7 @@ Num   Libellé
                 PERFORM FIN
              END-IF
              
-        * SUPPRESSION D'UN EMPLOYE
+      *SUPPRESSION D'UN EMPLOYE
              INITIALIZE ZACCESSEUR
              MOVE 'S'      TO ZCODE-FONC
              MOVE '100'    TO ZMAT
@@ -250,12 +249,12 @@ Num   Libellé
                 PERFORM FIN
              END-IF
 
-         * LECTURE DE L'EMPLOYE 100
+      *LECTURE DE L'EMPLOYE 100
              INITIALIZE ZACCESSEUR
              MOVE '100'    TO ZMAT
              PERFORM LECTURE-EMPLOYE
              
-         * CREATION DU DEPARTEMENT DEP
+      *CREATION DU DEPARTEMENT DEP
              INITIALIZE DACCESSEUR
              MOVE 'C'      TO DCODE-FONC
              MOVE 'DEP'    TO DNOD
@@ -281,12 +280,12 @@ Num   Libellé
                 DISPLAY '--- LIBELLE ERR : '      DLIBERR
              END-IF
              
-         * LECTURE DU DEPT DEP
+      *LECTURE DU DEPT DEP
              INITIALIZE DACCESSEUR
              MOVE 'DEP'    TO DNOD
              PERFORM LECTURE-DEPARTEMENT   
           
-         * MODIFICATION DU DEPARTEMENT DEP      
+      *MODIFICATION DU DEPARTEMENT DEP      
              INITIALIZE ZACCESSEUR
              MOVE 'M'      TO DCODE-FONC
              MOVE 'DEP'    TO DNOD
@@ -311,14 +310,14 @@ Num   Libellé
                 DISPLAY '--- LIBELLE ERR : '      DLIBERR
              END-IF  
           
-         * LECTURE DU DEPARTEMENT DEP
+      *LECTURE DU DEPARTEMENT DEP
              INITIALIZE DACCESSEUR
              MOVE 'DEP'    TO DNOD
              PERFORM LECTURE-DEPARTEMENT
              
              
-         * LISTE DES DEPARTEMENTS
-         * OUVERTURE DU CURSEUR
+      *LISTE DES DEPARTEMENTS
+      *OUVERTURE DU CURSEUR
              INITIALIZE DACCESSEUR
              MOVE 'O'      TO DCODE-FONC
              CALL ACCESS2A USING DACCESSEUR
@@ -330,7 +329,7 @@ Num   Libellé
                 PERFORM FIN
              END-IF
  
-        * BOUCLE DE LECTURE
+      *BOUCLE DE LECTURE
              INITIALIZE DACCESSEUR
              MOVE 'Q'      TO DCODE-FONC
              CALL ACCESS2A USING DACCESSEUR
@@ -347,7 +346,7 @@ Num   Libellé
                   PERFORM FIN
                END-IF
             
-        * FERMETURE DU CURSEUR
+      *FERMETURE DU CURSEUR
                INITIALIZE DACCESSEUR
                MOVE 'F'      TO DCODE-FONC
                CALL ACCESS2A USING DACCESSEUR
@@ -360,7 +359,7 @@ Num   Libellé
                   PERFORM FIN
                END-IF
                
-        * SUPPRESSION D'UN DEPARTEMENT
+      *SUPPRESSION D'UN DEPARTEMENT
                INITIALIZE DACCESSEUR
                MOVE 'S'      TO DCODE-FONC
                MOVE 'DEP'    TO DNOD
@@ -374,13 +373,13 @@ Num   Libellé
                   PERFORM FIN
                END-IF
                
-        * LECTURE DU DEPT DEP
+      *LECTURE DU DEPT DEP
                INITIALIZE DACCESSEUR
                MOVE 'DEP'    TO DNOD
                PERFORM LECTURE-DEPARTEMENT
                .
           
-        * LECTURE D'UN EMPLOYE
+      *LECTURE D'UN EMPLOYE
          LECTURE-EMPLOYE.
                MOVE 'L'      TO ZCODE-FONC
                DISPLAY SPACES
@@ -403,7 +402,7 @@ Num   Libellé
                 END-IF
                 .
                 
-        * LECTURE D'UN DEPARTEMENT
+      *LECTURE D'UN DEPARTEMENT
        LECTURE-DEPARTEMENT.
                MOVE 'L'      TO ZCODE-FONC
                DISPLAY SPACES
